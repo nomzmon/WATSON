@@ -1,0 +1,4 @@
+Labeled inputs for component testing.
+- input_constraint_labeled.csv : user message, expected decision (Accept/Rephrase/Redirect/Reject), expected criterion scores
+- output_validation_labeled.csv: candidate response, human label (in-character / drifted), notes
+Used to compute false positive / false negative rates.

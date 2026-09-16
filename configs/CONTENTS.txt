@@ -1,0 +1,6 @@
+All tunable settings, kept out of code so experiments are reproducible.
+- models/         : generator and judge model settings
+- rubrics/        : WICS, DFMS, OVS weights and decision thresholds (+ weight-variance variants)
+- system/         : the four system configurations (module on/off toggles)
+- experiments/    : experiment run definitions
+Prefer YAML. Never put API keys here; use .env.

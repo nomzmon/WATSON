@@ -1,0 +1,5 @@
+Research ethics documents (templates and approvals only).
+- consent_form_template.docx / .pdf
+- ethics_approval.pdf
+- data_management_plan.md (storage, anonymization, retention)
+DO NOT commit signed consent forms or anything with participant names. Those stay in secure offline storage.

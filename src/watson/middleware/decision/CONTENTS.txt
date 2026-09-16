@@ -1,0 +1,4 @@
+Decision Layer (5.1.2, Table 5.2).
+- decision.py : Accept / Rephrase / Redirect / Reject rules, including per-criterion floors
+- rephrase.py : automatic rephrasing
+- redirect.py : redirect message generation

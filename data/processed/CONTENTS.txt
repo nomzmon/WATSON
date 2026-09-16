@@ -1,0 +1,4 @@
+Final extraction-ready data.
+- holmes_dialogue.jsonl   : Holmes utterances with context
+- holmes_narrative.jsonl  : narrative passages describing Holmes
+- chunks/                 : chunked documents sized for the extraction model's context window

@@ -1,0 +1,4 @@
+Dialogue Flow Manager (5.1.4, 5.2.2).
+- state_tracker.py      : investigation stages (introduction, evidence, suspects, deduction, resolution)
+- flow_evaluator.py     : DFMS scoring via judge
+- constraint_selector.py: picks constraints from the library based on DFMS results

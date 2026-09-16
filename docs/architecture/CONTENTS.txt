@@ -1,0 +1,5 @@
+Architecture and design references.
+- Diagram source files (.drawio, .excalidraw, .png) for Persona Construction, WATSON middleware, evaluation stages
+- ADRs (architecture decision records), e.g. adr-001-generator-and-judge-models.md
+- pipeline_order.md : final order of Prompt Builder <-> Dialogue Flow Manager
+- interfaces.md     : input/output contract of each middleware component

@@ -1,0 +1,5 @@
+Project documentation (not code).
+- thesis/        : thesis drafts, defense slides, panel feedback
+- architecture/  : system diagrams (Fig 4.1, 5.1-5.8 sources), design decisions
+- ethics/        : blank consent form templates, ethics approval (NO signed forms here)
+- meeting-notes/ : adviser/group meeting notes, action items

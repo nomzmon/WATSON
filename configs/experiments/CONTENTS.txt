@@ -1,0 +1,4 @@
+Experiment run definitions.
+- framework_validation.yaml : scenarios x configurations for automated testing (Phase 3)
+- weight_variance.yaml      : which rubric variants to run and on which dataset
+- participant_study.yaml    : session setup, randomized configuration order per participant ID

@@ -1,0 +1,2 @@
+Local model weights / GGUF files / caches.
+Entirely gitignored (too large). Record which exact model versions you used in configs/models/.

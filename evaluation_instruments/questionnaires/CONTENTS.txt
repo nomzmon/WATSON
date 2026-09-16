@@ -1,0 +1,5 @@
+Post-session questionnaires.
+- sus.md                     : 10-item System Usability Scale
+- persona_consistency.md     : Likert items on character consistency, narrative coherence, immersion
+- wait_time.md               : perceived response wait time items
+- screening.md               : Holmes familiarity screening questions

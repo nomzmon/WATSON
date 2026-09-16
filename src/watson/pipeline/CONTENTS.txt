@@ -1,0 +1,4 @@
+Turn orchestration.
+- orchestrator.py : runs a full turn through enabled components in order
+- session.py      : conversation session object (history, state, participant/config IDs)
+- toggles.py      : loads configs/system/*.yaml to enable/disable modules

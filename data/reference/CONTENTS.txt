@@ -1,0 +1,3 @@
+Reference character profile for persona validation (Section 4.3).
+- supersummary_holmes.txt/.md
+Copyrighted material: gitignored, keep a local copy only. Commit only a note on where/when it was obtained.

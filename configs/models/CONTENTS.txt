@@ -1,0 +1,5 @@
+Model settings.
+- generator.yaml       : Gemma model id (confirm Gemma-3 12B vs Gemma-7B), temperature, max tokens, context window
+- judge.yaml           : Llama judge model id (confirm Llama 3.1 8B vs Llama 3 8B), temperature (low), output format
+- extraction.yaml      : GPT-5 / OpenAI Responses API settings for persona trait extraction
+- serving.yaml         : local serving backend (e.g. Ollama / vLLM / llama.cpp), host, port

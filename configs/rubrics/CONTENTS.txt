@@ -1,0 +1,6 @@
+Scoring rubrics and thresholds.
+- wics.yaml : Input Constraint weights (OOP .35, TR .25, HC .25, GIC .15), score scale, Accept/Rephrase/Redirect/Reject rules
+- dfms.yaml : Dialogue Flow weights (CST .35, NP .30, CC .20, TBC .15), constraint-selection thresholds
+- ovs.yaml  : Output Validation weights (PCC .40, NC .30, HWB .20, SS .10), pass threshold, max retries, fallback message
+- pcs.yaml  : Persona Construction Score acceptance threshold (>= 3.5)
+- variants/ : equal-weight, theory-driven, and inverted-ablation versions of each rubric

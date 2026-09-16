@@ -1,0 +1,3 @@
+Automated test runs of the 4 configurations on scripted scenarios.
+- runs/<date>_<config>/ : logs, scores, latency (gitignored)
+- summary.csv / summary.md : aggregated results (committed)

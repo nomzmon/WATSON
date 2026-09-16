@@ -1,0 +1,6 @@
+The four system configurations compared in evaluation.
+- c1_baseline.yaml         : persona prompting only, all middleware off
+- c2_input_constraint.yaml : baseline + Input Constraint Engine + Decision Layer
+- c3_dialogue_flow.yaml    : baseline + Dialogue Flow Manager
+- c4_watson_full.yaml      : all modules on
+Each file = module toggles + which rubric/model configs to load.

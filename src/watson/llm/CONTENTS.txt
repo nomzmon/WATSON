@@ -1,0 +1,6 @@
+LLM client wrappers.
+- base.py          : common interface (generate, structured output, timing)
+- gemma_client.py  : generator model
+- llama_client.py  : judge model
+- openai_client.py : GPT-5 extraction (Responses API)
+- json_parsing.py  : robust parsing/repair of judge JSON outputs

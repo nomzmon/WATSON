@@ -1,0 +1,8 @@
+Command-line entry points.
+- download_corpus.py
+- build_persona.py         : preprocess -> extract -> validate
+- run_chat.py              : local terminal chat with a chosen config
+- run_framework_validation.py
+- run_weight_variance.py
+- analyze_results.py
+- setup_models.sh          : pull/serve local models

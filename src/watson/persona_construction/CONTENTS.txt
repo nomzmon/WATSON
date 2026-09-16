@@ -1,0 +1,6 @@
+Persona Knowledge Base construction (Chapter 4).
+- download.py      : fetch Gutenberg texts
+- preprocess.py    : cleaning, dialogue/narrative separation
+- ner_coref.py     : NER + coreference resolution
+- extract_traits.py: GPT-5 structured-output extraction into 5 layers
+- validate.py      : Judge LLM comparison vs reference, PCS computation, accept/regenerate loop

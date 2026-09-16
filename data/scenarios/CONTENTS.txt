@@ -1,0 +1,3 @@
+Predefined fictional investigative scenarios used in framework validation and participant sessions.
+- scenario_01_<name>.yaml : case premise, clues, suspects, expected investigation stages, allowed resolution
+- scripted_dialogues/     : fixed multi-turn user scripts for automated testing (incl. drift-inducing turns: off-topic, anachronism, persona-breaking)

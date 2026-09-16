@@ -1,0 +1,4 @@
+Dialogue Constraint Library (6 categories). One YAML/JSON file each:
+- dialogue_state.yaml, narrative_progression.yaml, topic_boundary.yaml,
+  context_continuity.yaml, persona.yaml, historical.yaml
+Each constraint: id, category, text, strength levels (for constraint refinement).

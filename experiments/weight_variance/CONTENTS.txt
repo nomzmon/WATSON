@@ -1,0 +1,3 @@
+Weight-variance experiments for WICS, DFMS, OVS (equal / theory / ablation).
+- runs/ (gitignored)
+- results_wics.csv, results_dfms.csv, results_ovs.csv : FPR, FNR, human agreement per variant

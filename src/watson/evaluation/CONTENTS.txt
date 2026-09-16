@@ -1,0 +1,7 @@
+Evaluation and analysis code.
+- persona_adherence.py : persona adherence rate (define formula first!)
+- interaction_entropy.py: interaction entropy / entropy reduction
+- validation_errors.py : false positive / false negative rates vs human labels
+- sus.py               : System Usability Scale scoring
+- stats.py             : statistical tests across the 4 configurations
+- judge_agreement.py   : judge vs human agreement (e.g. Cohen's kappa)

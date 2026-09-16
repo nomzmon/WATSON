@@ -1,0 +1,4 @@
+Integration tests.
+- test_pipeline_c1..c4.py : each system configuration runs end to end
+- test_persona_pipeline.py
+Use mocked LLM clients so tests run without GPUs.

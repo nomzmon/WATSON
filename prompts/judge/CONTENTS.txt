@@ -1,0 +1,5 @@
+Judge LLM prompts (Llama).
+- persona_validation.txt : compare generated vs reference profile, score 1-5 per layer + feedback
+- input_constraint.txt   : score OOP, TR, HC, GIC with justifications, JSON output
+- dialogue_flow.txt      : score CST, NP, CC, TBC, JSON output
+- output_validation.txt  : score PCC, NC, HWB, SS, JSON output

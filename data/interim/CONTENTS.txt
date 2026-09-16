@@ -1,0 +1,5 @@
+Intermediate preprocessing outputs.
+- cleaned/     : Gutenberg headers/footers and metadata removed
+- coref/       : coreference-resolved text (pronouns -> character names)
+- segmented/   : dialogue vs narrative passages with speaker attribution (JSON/JSONL)
+Gitignored; regenerate with the preprocessing scripts.

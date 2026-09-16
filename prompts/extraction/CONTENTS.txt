@@ -1,0 +1,3 @@
+Persona trait extraction prompts (Section 4.2).
+- personality.txt, expression.txt, knowledge.txt, moral.txt, belief.txt
+- system.txt : shared instructions (extract only, cite textual evidence)

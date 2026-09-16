@@ -1,0 +1,6 @@
+Jupyter notebooks for exploration and analysis.
+- 01_corpus_exploration.ipynb
+- 02_persona_extraction_checks.ipynb
+- 03_judge_calibration.ipynb
+- 04_results_analysis.ipynb
+Clear outputs before committing.

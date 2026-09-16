@@ -1,0 +1,4 @@
+Backend server for the chat interface.
+- app.py     : server entry (e.g. FastAPI)
+- routes.py  : start session, send message, end session
+- schemas.py : request/response models

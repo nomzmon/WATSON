@@ -1,0 +1,77 @@
+# ---------- Secrets ----------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# ---------- Node / frontend ----------
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+npm-debug.log*
+yarn-error.log*
+
+# ---------- OS / editors ----------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ---------- Models (large) ----------
+models/*
+!models/.gitkeep
+!models/CONTENTS.txt
+*.gguf
+*.safetensors
+*.bin
+*.pt
+.cache/
+hf_cache/
+
+# ---------- Data (regenerable or copyrighted) ----------
+data/raw/*
+!data/raw/.gitkeep
+!data/raw/CONTENTS.txt
+!data/raw/sources.csv
+data/interim/*
+!data/interim/.gitkeep
+!data/interim/CONTENTS.txt
+data/reference/*
+!data/reference/.gitkeep
+!data/reference/CONTENTS.txt
+
+# ---------- Experiment run artifacts ----------
+experiments/**/runs/
+experiments/participant_study/logs/
+experiments/participant_study/responses/
+
+# ---------- Participant / ethics sensitive ----------
+docs/ethics/signed/
+*consent_signed*
+*participant_key*
+
+# ---------- Logs ----------
+logs/*
+!logs/.gitkeep
+!logs/CONTENTS.txt
+*.log

@@ -1,0 +1,5 @@
+Participant study artifacts. SENSITIVE.
+- session_order.csv : participant code -> randomized configuration order (codes only, no names)
+- logs/             : anonymized conversation logs (gitignored)
+- responses/        : questionnaire exports (gitignored)
+Keep the code-to-name key offline in password-protected storage, never in this repo.

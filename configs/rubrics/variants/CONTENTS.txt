@@ -1,0 +1,4 @@
+Weight-variance experiment rubric variants (Sections 5.2.1-5.2.3).
+- wics_equal.yaml, wics_theory.yaml, wics_ablation.yaml
+- dfms_equal.yaml, dfms_theory.yaml, dfms_ablation.yaml
+- ovs_equal.yaml,  ovs_theory.yaml,  ovs_ablation.yaml

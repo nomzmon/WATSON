@@ -1,0 +1,2 @@
+Response Generation Layer (5.1.5).
+- generator.py : calls the Gemma client with the final prompt, returns candidate response

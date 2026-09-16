@@ -1,0 +1,4 @@
+Generated persona profiles (Persona Knowledge Base).
+- holmes_profile_v001.json, v002, ... : every extraction attempt
+- holmes_profile_final.json           : the validated profile (PCS >= 3.5) used by the middleware
+- schema/persona_schema.json          : the 5-layer JSON schema (Personality, Expression, Knowledge, Moral, Belief)

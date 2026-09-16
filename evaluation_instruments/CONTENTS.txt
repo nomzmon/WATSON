@@ -1,0 +1,3 @@
+Instruments used for human evaluation.
+- questionnaires/ : SUS, perceived persona consistency, perceived wait time, open-ended feedback
+- annotation/     : human annotation guidelines and templates for labeling responses

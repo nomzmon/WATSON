@@ -1,0 +1,6 @@
+All prompt templates, versioned separately from code.
+- extraction/  : persona trait extraction prompts (GPT-5)
+- judge/       : Judge LLM rubric prompts
+- generation/  : Holmes response generation templates
+- decision/    : rephrase and redirect prompts/messages
+Use placeholders like {persona_profile}, {dialogue_state}, {history}.

@@ -1,0 +1,5 @@
+Output Validation Engine (5.1.6, 5.2.3).
+- validator.py          : OVS scoring via judge
+- constraint_refiner.py : strengthens constraints tied to weak dimensions
+- retry.py              : retry counter + fallback response
+- safety_filter.py      : optional guardrail pass (Section 3.5.3), if kept in final design

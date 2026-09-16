@@ -1,0 +1,4 @@
+Human annotation materials (for judge agreement and FPR/FNR).
+- guidelines.md       : definitions of in-character vs drift, examples
+- annotation_template.csv
+- inter_annotator_agreement.md : procedure and results

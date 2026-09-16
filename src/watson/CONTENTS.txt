@@ -1,0 +1,9 @@
+Main package.
+- persona_construction/ : Chapter 4 pipeline
+- middleware/           : Chapter 5 WATSON components
+- llm/                  : model client wrappers
+- pipeline/             : orchestrator that runs one conversational turn
+- logging/              : interaction log writer
+- evaluation/           : metrics and analysis code
+- api/                  : backend server for the chat interface
+- common/               : shared schemas, config loader, utilities

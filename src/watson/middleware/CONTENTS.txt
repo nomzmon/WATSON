@@ -1,0 +1,1 @@
+WATSON interaction-layer components (Section 5.1). One subfolder per component so each can be toggled for the 4 configurations.

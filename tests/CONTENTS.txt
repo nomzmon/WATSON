@@ -1,0 +1,4 @@
+Automated tests (pytest).
+- unit/        : scoring formulas, decision rules, state transitions, parsing
+- integration/ : full turn through the pipeline with mocked LLMs
+- fixtures/    : sample profiles, judge outputs, dialogues

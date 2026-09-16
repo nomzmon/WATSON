@@ -1,0 +1,4 @@
+Participant-facing chat interface.
+- Chat UI, AI disclosure banner, session start/end, participant ID entry
+- Config ID must stay hidden from participants (blind to condition)
+Add framework-specific files here (package.json, src/, public/).

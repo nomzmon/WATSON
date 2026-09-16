@@ -1,0 +1,3 @@
+Final outputs for the thesis write-up (committed).
+- figures/ : charts (.png/.pdf) with the script that made them noted
+- tables/  : result tables (.csv/.tex)

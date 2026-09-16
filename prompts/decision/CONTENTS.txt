@@ -1,0 +1,4 @@
+Decision Layer templates.
+- rephrase.txt       : rewrite a user input for clarity without changing meaning
+- redirect.txt       : steer the user back to the investigation
+- reject_message.txt : predefined system message for rejected inputs

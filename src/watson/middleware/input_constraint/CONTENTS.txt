@@ -1,0 +1,3 @@
+Input Constraint Engine (5.1.1, 5.2.1).
+- engine.py  : sends user message + context to judge, parses criterion scores
+- scoring.py : WICS computation from configs/rubrics/wics.yaml

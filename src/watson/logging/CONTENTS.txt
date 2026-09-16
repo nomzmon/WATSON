@@ -1,0 +1,3 @@
+Interaction logging (needed for automated metrics).
+- logger.py : per-turn JSONL records: timestamps, latency per component, input, WICS/DFMS/OVS scores, decisions, retries, final response
+- anonymize.py : strips identifying info before analysis

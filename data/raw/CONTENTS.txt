@@ -1,0 +1,4 @@
+Raw canonical Sherlock Holmes texts from Project Gutenberg.
+- One .txt per work (e.g. a_study_in_scarlet.txt, the_hound_of_the_baskervilles.txt)
+- sources.csv : title, Gutenberg ID, URL, download date
+Gitignored by default (re-downloadable with scripts/download_corpus.py). Keep sources.csv committed.

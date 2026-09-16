@@ -1,0 +1,8 @@
+All datasets. Large/sensitive subfolders are gitignored (see .gitignore).
+- raw/              : untouched source texts
+- interim/          : cleaned + coreference-resolved text
+- processed/        : final structured datasets for extraction
+- reference/        : reference persona profile used for validation (not committed)
+- persona_profiles/ : generated JSON persona profiles and their versions
+- scenarios/        : predefined investigative case scenarios for testing
+- test_inputs/      : labeled user inputs for testing the Input Constraint Engine

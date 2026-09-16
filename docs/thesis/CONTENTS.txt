@@ -1,0 +1,4 @@
+Thesis manuscript files.
+- LaTeX source or exported PDFs of each version (e.g. v1_partial_thesis_2026-08-12.pdf)
+- panel_comments.md : consolidated comments from panelists/adviser and how each was addressed
+- changelog.md      : what changed per revision

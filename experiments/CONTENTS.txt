@@ -1,0 +1,4 @@
+Experiment outputs (run artifacts). Raw runs are gitignored; commit summaries only.
+- framework_validation/ : Phase 3 automated runs
+- weight_variance/      : rubric weight experiments
+- participant_study/    : Phase 4 sessions

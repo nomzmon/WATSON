@@ -1,0 +1,7 @@
+Root of the repository. Files expected here:
+- README.md          : project overview and repo map
+- .gitignore         : ignore rules (secrets, models, raw/copyrighted data, participant data)
+- .env.example       : template for environment variables
+- pyproject.toml or requirements.txt : Python dependencies (to add)
+- LICENSE            : to decide with adviser (to add)
+- CONTRIBUTING.md    : branch naming, commit style, PR/review rules (to add)

@@ -1,0 +1,5 @@
+Response generation templates (Gemma).
+- baseline_persona.txt  : plain persona prompt for configuration C1
+- structured_prompt.txt : full Prompt Builder template (persona + state + history + case context + constraints)
+- fallback_response.txt : predefined in-character fallback after max retries
+- ai_disclosure.txt     : notice that the chatbot is an AI portraying Holmes
