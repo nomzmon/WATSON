@@ -43,12 +43,19 @@ def get_settings() -> Settings:
     return Settings.load()
 
 
-def load_yaml(path: str | Path) -> dict[str, Any]:
+def resolve_path(path: str | Path) -> Path:
+    """Relative paths are resolved from the repository root, not the current directory."""
     path = Path(path)
-    if not path.is_absolute():
-        path = PROJECT_ROOT / path
-    with path.open("r", encoding="utf-8") as f:
+    return path if path.is_absolute() else PROJECT_ROOT / path
+
+
+def load_yaml(path: str | Path) -> dict[str, Any]:
+    with resolve_path(path).open("r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def load_text(path: str | Path) -> str:
+    return resolve_path(path).read_text(encoding="utf-8")
 
 
 def load_configs(*paths: str | Path) -> dict[str, Any]:

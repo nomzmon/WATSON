@@ -1,0 +1,22 @@
+# Weighted Interaction Constraint Score (WICS)
+# Thesis Section 5.2.1, Equation 5.1 and Table 5.2.
+# The judge scores each criterion as a whole number from 1 to 10.
+
+weights:
+  OOP: 0.35  # Out-of-Persona Compatibility
+  TR: 0.25   # Topic Relevance
+  HC: 0.25   # Historical Consistency
+  GIP: 0.15  # Guided Input Compliance
+
+# Decision Layer (Section 5.2.1.1). Each value is the minimum score for that
+# decision; anything below `redirect` is Reject. The final decision is the
+# stricter of the WICS band and the lowest single criterion's band.
+decision:
+  wics:
+    accept: 8.0
+    rephrase: 6.0
+    redirect: 4.0
+  lowest_criterion:
+    accept: 7
+    rephrase: 5
+    redirect: 3
