@@ -1,0 +1,11 @@
+# Gemma generator settings (Response Generation Layer, thesis Section 5.1.5).
+# The model name comes from GENERATOR_MODEL in .env.
+
+temperature: 0.7
+max_tokens: 400
+# Gemma-7B supports 8192 tokens. Ollama's default is smaller and silently cuts
+# off the start of longer prompts, which is where the persona profile sits.
+context_window: 8192
+timeout: 180
+# Stop if the model starts writing the visitor's next line itself.
+stop: ["Visitor:"]
