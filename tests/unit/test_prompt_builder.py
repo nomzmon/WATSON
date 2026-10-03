@@ -88,6 +88,15 @@ def test_persona_layers_are_rendered_under_headings_and_empty_layers_skipped():
     assert "What you know" not in text
 
 
+def test_baseline_and_structured_templates_share_opening_and_closing_instructions():
+    # C1 and C4 must differ only in the middleware sections, or the comparison is confounded.
+    baseline = load_text("prompts/generation/baseline_persona.txt").strip().splitlines()
+    structured = load_text("prompts/generation/structured_prompt.txt").strip().splitlines()
+
+    assert baseline[0] == structured[0]
+    assert baseline[-1] == structured[-1]
+
+
 def test_repo_templates_only_use_known_placeholders():
     builder = make_builder()
     for path in ("prompts/generation/structured_prompt.txt", "prompts/generation/baseline_persona.txt"):

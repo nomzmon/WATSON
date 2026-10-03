@@ -39,6 +39,11 @@ def test_generate_strips_copied_name_label():
         ("Sherlock Holmes: Quite so.", "Quite so."),
         ("holmes : Quite so.", "Quite so."),
         ("Quite so, Holmes: indeed.", "Quite so, Holmes: indeed."),  # only a leading label is removed
+        ('"The footprints tell us much."', "The footprints tell us much."),
+        ("\u201cThe footprints tell us much.\u201d", "The footprints tell us much."),
+        ('Holmes: "Quite so."', "Quite so."),
+        ('"Indeed," said I. "Most curious."', '"Indeed," said I. "Most curious."'),  # separate quotes kept
+        ('He called it "elementary".', 'He called it "elementary".'),
     ],
 )
 def test_clean_response(raw, cleaned):

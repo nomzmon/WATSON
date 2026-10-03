@@ -15,6 +15,7 @@ from watson.llm.base import LLMClient, LLMResponse
 from watson.llm.gemma_client import GemmaClient
 
 _NAME_LABEL = re.compile(r"^\s*(?:Sherlock\s+)?Holmes\s*:\s*", re.IGNORECASE)
+_QUOTE_PAIRS = {'"': '"', "\u201c": "\u201d"}
 
 
 class ResponseGenerator:
@@ -45,5 +46,13 @@ class ResponseGenerator:
 
 
 def clean_response(text: str) -> str:
-    """Drop a leading 'Holmes:' label, which models often copy from the history format."""
-    return _NAME_LABEL.sub("", text.strip(), count=1).strip()
+    """Drop a leading 'Holmes:' label and quotation marks wrapping the whole reply.
+
+    Quotes are only removed when they enclose everything; a reply quoting several
+    separate phrases is left as is, since stripping its ends would break it.
+    """
+    text = _NAME_LABEL.sub("", text.strip(), count=1).strip()
+    opening, closing, inner = text[:1], text[-1:], text[1:-1]
+    if len(text) >= 2 and _QUOTE_PAIRS.get(opening) == closing and opening not in inner and closing not in inner:
+        text = inner.strip()
+    return text
