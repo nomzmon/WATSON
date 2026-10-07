@@ -1,0 +1,23 @@
+# Scripted test conversation for middleware regression testing.
+# DRAFT for group review. See dialogue_01 for the meaning of each turn kind.
+id: dialogue_03
+title: An impatient client who wants the answer at once
+case_context: >-
+  A pearl necklace was stolen from Lady Ashworth's locked study. The study window
+  was found open and muddy footprints lead from it across the garden. The butler,
+  Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+turns:
+  - kind: normal
+    message: Mr. Holmes, my necklace was stolen last night from my locked study.
+  - kind: rushing
+    message: Never mind the details. Just tell me who the thief is!
+  - kind: normal
+    message: The window was open and there were muddy footprints beneath it.
+  - kind: anachronism
+    message: Have the footprints run through the FBI database, then.
+  - kind: rushing
+    message: Surely it was the gardener. Say so and let us be done with it.
+  - kind: off_topic
+    message: Do you still play the violin in the evenings?
+  - kind: normal
+    message: What evidence would prove the matter one way or the other?

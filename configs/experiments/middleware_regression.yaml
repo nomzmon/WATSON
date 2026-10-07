@@ -1,0 +1,24 @@
+# Component-by-component middleware regression test (iterative refinement).
+# Each step adds one middleware component to the previous step. Every step
+# replays the same scripted conversations with the same seeds, so a change in
+# the results comes from the added component. Add a step here each time a new
+# component is built: the Dialogue Flow Manager next, then Output Validation.
+
+profile: tests/fixtures/holmes_profile_sample.json  # stand-in until the knowledge-base team delivers the validated profile
+dialogues: data/scenarios/scripted_dialogues
+seed: 42
+
+# DRAFT: a step regresses if the mean persona score on normal turns falls by
+# more than this (1-10 scale) compared with the previous step.
+regression_tolerance: 1.0
+
+steps:
+  - name: persona prompt only
+    template: prompts/generation/baseline_persona.txt
+    modules: {}
+
+  - name: + input constraint and decision layer
+    template: prompts/generation/baseline_persona.txt
+    modules:
+      input_constraint: true
+      decision_layer: true

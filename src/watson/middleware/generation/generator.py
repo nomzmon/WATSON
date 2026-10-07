@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 from watson.common.config import Settings, load_yaml
 from watson.llm.base import LLMClient, LLMResponse
@@ -39,8 +40,10 @@ class ResponseGenerator:
         )
         return cls(client, stop=config.get("stop", ()))
 
-    def generate(self, prompt: str) -> LLMResponse:
-        options = {"stop": self.stop} if self.stop else {}
+    def generate(self, prompt: str, **options: Any) -> LLMResponse:
+        """Extra keyword arguments are passed to the model, e.g. seed=42 for a reproducible reply."""
+        if self.stop:
+            options = {"stop": self.stop, **options}
         response = self.client.generate(prompt, **options)
         return response.model_copy(update={"text": clean_response(response.text)})
 

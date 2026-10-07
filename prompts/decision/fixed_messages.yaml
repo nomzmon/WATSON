@@ -1,0 +1,13 @@
+# Fixed Decision Layer replies (thesis Section 5.2.1.1), used until rephrasing
+# and redirect generation are designed. DRAFT wording for group review.
+# Rephrase currently passes the visitor's original message through unchanged.
+
+# Redirect: steer the visitor back to the investigation, in Holmes' voice.
+redirect: >-
+  A diverting thought, but it brings us not one step nearer the truth of this affair.
+  Let us return to the matter at hand.
+
+# Reject: a system notice, not Holmes speaking, per Section 5.2.1.1.
+reject: >-
+  [System notice] This request cannot be processed in the Sherlock Holmes role-play.
+  Please continue with a question about the case.

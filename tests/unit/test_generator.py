@@ -25,6 +25,21 @@ def test_generate_sends_prompt_with_stop_sequences():
 
     assert response.text == "Elementary."
     assert client.calls == [{"prompt": "the structured prompt", "stop": ["Visitor:"]}]
+    
+
+def test_generate_passes_extra_options_such_as_seed():
+    client = FakeGemma("Elementary.")
+
+    ResponseGenerator(client, stop=["Visitor:"]).generate("prompt", seed=42)
+
+    assert client.calls == [{"prompt": "prompt", "stop": ["Visitor:"], "seed": 42}]
+
+def test_generate_passes_extra_options_such_as_seed():
+    client = FakeGemma("Elementary.")
+
+    ResponseGenerator(client, stop=["Visitor:"]).generate("prompt", seed=42)
+
+    assert client.calls == [{"prompt": "prompt", "stop": ["Visitor:"], "seed": 42}]
 
 
 def test_generate_strips_copied_name_label():

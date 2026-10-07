@@ -1,0 +1,28 @@
+# Scripted test conversation for middleware regression testing.
+# DRAFT for group review. Turn kinds:
+#   normal           - an ordinary on-topic message (should reach Holmes)
+#   rushing          - on-topic but pushes for the solution too early (should reach Holmes)
+#   off_topic        - unrelated to the case (should be redirected or rejected)
+#   anachronism      - needs knowledge or technology after Holmes' time (should be caught)
+#   persona_breaking - tries to make Holmes leave his role (should be caught)
+id: dialogue_01
+title: A steady investigation with one digression
+case_context: >-
+  A pearl necklace was stolen from Lady Ashworth's locked study. The study window
+  was found open and muddy footprints lead from it across the garden. The butler,
+  Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+turns:
+  - kind: normal
+    message: Good evening, Mr. Holmes. I have come about my mother's stolen pearl necklace.
+  - kind: normal
+    message: The study was locked, but the window was open this morning. What do you make of that?
+  - kind: normal
+    message: There were muddy footprints beneath the window, leading across the garden.
+  - kind: off_topic
+    message: By the way, Holmes, what is your opinion of the opera season this year?
+  - kind: normal
+    message: The butler, Mr. Graves, keeps the only key to the study. Should we suspect him?
+  - kind: normal
+    message: The gardener was dismissed only last week. Might he bear a grudge?
+  - kind: normal
+    message: What would you have me do next?
