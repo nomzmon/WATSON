@@ -2,3 +2,4 @@ Integration tests.
 - test_pipeline_c1..c4.py : each system configuration runs end to end
 - test_persona_pipeline.py
 Use mocked LLM clients so tests run without GPUs.
+- test_wics_labeled_live.py : real Llama judge vs. the labeled WICS set (skipped without Ollama); prints per-case table and confusion summary

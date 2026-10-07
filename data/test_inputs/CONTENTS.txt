@@ -2,3 +2,8 @@ Labeled inputs for component testing.
 - input_constraint_labeled.csv : user message, expected decision (Accept/Rephrase/Redirect/Reject), expected criterion scores
 - output_validation_labeled.csv: candidate response, human label (in-character / drifted), notes
 Used to compute false positive / false negative rates.
+input_constraint_labeled.csv columns (DRAFT reference labels, pending annotator review):
+  id, category (accept/rephrase/redirect/reject/boundary), dialogue_stage, user_message,
+  exp_OOP/exp_TR/exp_HC/exp_GIP (1-10), exp_wics (Equation 5.1), exp_decision (stricter of WICS band and
+  lowest-criterion band), target_criterion (criterion the case probes), notes.
+  Case context for every row: the pearl necklace affair (CASE_CONTEXT in the WICS test modules).

@@ -1,3 +1,4 @@
 Unit tests.
 - test_wics.py, test_decision_rules.py (include edge cases where score ranges and criterion floors conflict)
 - test_dfms.py, test_ovs.py, test_state_tracker.py, test_retry.py, test_json_parsing.py
+- test_wics_rubric_cases.py : WICS rubric cases driven by data/test_inputs/input_constraint_labeled.csv (dataset integrity, engine -> decision -> pipeline routing, band/floor edges, exhaustive monotonicity, judge-output validation, judge prompt text)
