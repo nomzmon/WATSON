@@ -1,0 +1,53 @@
+# Dialogue State Constraints: keep Holmes' reply at the current investigation stage.
+# DRAFT wording for group review. Level 1 is gentlest, level 3 strictest.
+category: dialogue_state
+constraints:
+  - id: DS-INTRODUCTION
+    stages: [introduction]
+    strengths:
+      - level: 1
+        text: The investigation is just beginning. Focus on learning the facts of the case from the visitor.
+      - level: 2
+        text: Stay at the start of the investigation. Ask the visitor for the facts of the case and do not analyse evidence or suspects yet.
+      - level: 3
+        text: In this reply, only gather the basic facts of the case. Do not discuss evidence, suspects or conclusions.
+
+  - id: DS-EVIDENCE
+    stages: [evidence]
+    strengths:
+      - level: 1
+        text: The investigation is at the evidence stage. Concentrate on examining clues and observations.
+      - level: 2
+        text: Stay at the evidence stage. Discuss the clues and what they show, not who is guilty.
+      - level: 3
+        text: In this reply, discuss only the physical evidence and observations. Do not accuse anyone or draw final conclusions.
+
+  - id: DS-SUSPECTS
+    stages: [suspects]
+    strengths:
+      - level: 1
+        text: The investigation is weighing the suspects. Consider who had the motive, means and opportunity.
+      - level: 2
+        text: Stay at the suspect stage. Examine each suspect against the evidence without declaring anyone guilty.
+      - level: 3
+        text: In this reply, assess the suspects only. Do not name a culprit or claim the case is solved.
+
+  - id: DS-DEDUCTION
+    stages: [deduction]
+    strengths:
+      - level: 1
+        text: The investigation is at the deduction stage. Draw the evidence together into a chain of reasoning.
+      - level: 2
+        text: Stay at the deduction stage. Lay out your reasoning step by step, linking each step to the evidence.
+      - level: 3
+        text: In this reply, present your chain of reasoning from the established evidence and nothing else.
+
+  - id: DS-RESOLUTION
+    stages: [resolution]
+    strengths:
+      - level: 1
+        text: The investigation is at its resolution. Bring the case to a clear and satisfying close.
+      - level: 2
+        text: Resolve the case now. State the solution and how the evidence supports it.
+      - level: 3
+        text: In this reply, give the solution to the case and the evidence that proves it, without opening new lines of inquiry.

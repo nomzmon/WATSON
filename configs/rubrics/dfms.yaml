@@ -1,0 +1,20 @@
+# Dialogue Flow Management Score (DFMS)
+# Thesis Section 5.2.2, Equation 5.2. The judge scores each criterion as a
+# whole number from 1 to 10.
+
+weights:
+  CST: 0.35  # Conversation State Tracking
+  NP: 0.30   # Narrative Progression
+  CC: 0.20   # Context Continuity
+  TBC: 0.15  # Topic Boundary Control
+
+# Constraint selection. DRAFT values: the thesis does not specify them yet.
+# - The current stage's dialogue-state constraint is always added.
+# - If DFMS is below `guidance_below`, every criterion scoring below
+#   `weak_criterion_below` adds its category's constraints (if none does, the
+#   lowest criterion is used).
+# - If DFMS is below `strong_below`, constraints are added at strength level 2.
+selection:
+  guidance_below: 8.0
+  weak_criterion_below: 7
+  strong_below: 5.0

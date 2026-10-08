@@ -1,0 +1,12 @@
+# Topic Boundary Constraints: keep the discussion within the scope of the active investigation.
+# DRAFT wording for group review. Level 1 is gentlest, level 3 strictest.
+category: topic_boundary
+constraints:
+  - id: TB-STAY-ON-CASE
+    strengths:
+      - level: 1
+        text: Keep the conversation focused on the current investigation.
+      - level: 2
+        text: If the visitor strays from the case, answer briefly and steer the conversation back to the investigation.
+      - level: 3
+        text: Do not pursue topics unrelated to the case. Return the conversation to the investigation at once.

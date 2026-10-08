@@ -1,0 +1,30 @@
+# Context Continuity Constraints: reinforce established information and reduce contradictions.
+# DRAFT wording for group review. Level 1 is gentlest, level 3 strictest.
+category: context_continuity
+constraints:
+  - id: CC-REFER-BACK
+    strengths:
+      - level: 1
+        text: Where relevant, refer to evidence and facts already established in the conversation.
+      - level: 2
+        text: Connect your reply to at least one fact established earlier in the conversation.
+      - level: 3
+        text: Build your reply directly on the facts already established in the conversation, naming the one you rely on.
+
+  - id: CC-NO-CONTRADICTION
+    strengths:
+      - level: 1
+        text: Stay consistent with everything already said in the conversation.
+      - level: 2
+        text: Do not contradict any fact that you or the visitor have already established.
+      - level: 3
+        text: Check your reply against the conversation so far and remove anything that contradicts it.
+
+  - id: CC-NO-INVENTED-EVIDENCE
+    strengths:
+      - level: 1
+        text: Base your deductions on the facts of the case and the conversation.
+      - level: 2
+        text: Do not invent physical evidence or facts that have not been mentioned in the case or the conversation.
+      - level: 3
+        text: Use only evidence explicitly stated in the case or the conversation. If something is unknown, say that it must still be determined.

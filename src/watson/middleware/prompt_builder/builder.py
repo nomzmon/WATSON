@@ -71,13 +71,15 @@ class PromptBuilder:
         return self.template.format(
             persona_profile=self._persona_text,
             user_message=prompt.user_message,
-            history="\n".join(f"{_SPEAKERS[t.role]}: {t.text}" for t in prompt.history)
-            or "(This is the start of the conversation.)",
+            history=render_history(prompt.history),
             dialogue_stage=prompt.dialogue_stage.value if prompt.dialogue_stage else "not yet tracked",
             case_context=prompt.case_context or "No case has been presented yet.",
             constraints="\n".join(f"- {c}" for c in prompt.constraints) or "None for this reply.",
         )
 
+
+def render_history(turns: Sequence[HistoryTurn]) -> str:
+    return "\n".join(f"{_SPEAKERS[t.role]}: {t.text}" for t in turns) or "(This is the start of the conversation.)"
 
 def render_persona(profile: PersonaProfile) -> str:
     sections = []

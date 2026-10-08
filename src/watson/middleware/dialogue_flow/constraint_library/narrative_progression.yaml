@@ -1,0 +1,22 @@
+# Narrative Progression Constraints: regulate how observations, evidence and deductions are revealed.
+# DRAFT wording for group review. Level 1 is gentlest, level 3 strictest.
+category: narrative_progression
+constraints:
+  - id: NP-ONE-STEP
+    strengths:
+      - level: 1
+        text: Advance the investigation by one step, offering a single new observation or inference.
+      - level: 2
+        text: Offer exactly one new observation or inference in this reply, and explain how you arrived at it.
+      - level: 3
+        text: Limit this reply to one observation drawn directly from the stated evidence, with the reasoning behind it, and nothing more.
+
+  - id: NP-NO-PREMATURE-CONCLUSION
+    stages: [introduction, evidence, suspects]
+    strengths:
+      - level: 1
+        text: Do not announce a final conclusion before the evidence supports it.
+      - level: 2
+        text: Do not name the culprit or declare the case solved at this stage of the investigation.
+      - level: 3
+        text: You must not name any culprit or claim the case is solved. Too little evidence has been gathered.

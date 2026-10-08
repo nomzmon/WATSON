@@ -111,7 +111,11 @@ class ConstraintStrengthText(BaseModel):
 class Constraint(BaseModel):
     id: str
     category: ConstraintCategory
+    stages: list[DialogueStage] = Field(default_factory=list)  # empty means every stage
     strengths: list[ConstraintStrengthText]
+
+    def applies_to(self, stage: DialogueStage) -> bool:
+        return not self.stages or stage in self.stages
 
     def text_for(self, level: int) -> str:
         for strength in self.strengths:

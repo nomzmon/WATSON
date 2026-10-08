@@ -9,21 +9,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from watson.common.config import load_yaml
+from watson.common.rubric import load_rubric_weights, weighted_score
 
 WICS_CRITERIA = ("OOP", "TR", "HC", "GIP")
 
 
 def load_wics_weights(path: str | Path = "configs/rubrics/wics.yaml") -> dict[str, float]:
-    weights = load_yaml(path)["weights"]
-    if set(weights) != set(WICS_CRITERIA):
-        raise ValueError(f"WICS weights must cover exactly {WICS_CRITERIA}, got {sorted(weights)}")
-    total = sum(weights.values())
-    if abs(total - 1.0) > 1e-6:
-        raise ValueError(f"WICS weights must sum to 1.0, got {total}")
-    return {code: float(weights[code]) for code in WICS_CRITERIA}
+    return load_rubric_weights(path, WICS_CRITERIA, "WICS")
 
 
 def compute_wics(scores: Mapping[str, float], weights: Mapping[str, float]) -> float:
-    # Rounded so float error can't push a boundary score (e.g. exactly 8.0) into a lower band.
-    return round(sum(weights[code] * scores[code] for code in WICS_CRITERIA), 4)
+    return weighted_score(scores, weights)

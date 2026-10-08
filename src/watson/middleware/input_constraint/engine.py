@@ -10,18 +10,13 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from watson.common.config import load_text
+from watson.common.rubric import CriterionJudgement
 from watson.common.schemas import CriterionScore, DialogueStage, HistoryTurn, RubricName, RubricScore
 from watson.llm.base import LLMClient
 from watson.middleware.input_constraint.scoring import WICS_CRITERIA, compute_wics, load_wics_weights
-
-
-class CriterionJudgement(BaseModel):
-    reasoning: str
-    score: int = Field(ge=1, le=10)
-
 
 class WICSJudgement(BaseModel):
     OOP: CriterionJudgement
