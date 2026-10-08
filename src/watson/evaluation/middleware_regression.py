@@ -18,13 +18,14 @@ from statistics import mean
 from pydantic import BaseModel, Field, field_validator
 
 from watson.common.config import load_yaml, resolve_path
-from watson.common.schemas import DecisionType, ModuleToggles
+from watson.common.schemas import DecisionType, ModuleToggles, RubricScore
 from watson.evaluation.persona_consistency import PersonaConsistencyJudge
 from watson.llm.base import LLMClient
 from watson.middleware.decision.decision import load_decision_thresholds
 from watson.middleware.decision.messages import DecisionMessages
 from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.input_constraint.engine import InputConstraintEngine
+from watson.middleware.input_constraint.scoring import WICS_CRITERIA
 from watson.middleware.prompt_builder.builder import PromptBuilder
 from watson.pipeline.orchestrator import Pipeline
 from watson.pipeline.session import ConversationSession
@@ -86,11 +87,22 @@ class TurnRecord(BaseModel):
     kind: TurnKind
     message: str
     decision: DecisionType | None
+    # Input check: the WICS total and criterion scores behind the decision (empty without the Input Constraint Engine)
+    wics_total: float | None = None
+    wics_oop: int | None = None
+    wics_tr: int | None = None
+    wics_hc: int | None = None
+    wics_gip: int | None = None
+    input_check_reasons: str = ""
+    wics_reasoning: str = ""
     source: str
     reply: str
     persona_score: int | None
     persona_reasoning: str
     latency_ms: float
+
+    def wics_scores(self) -> dict[str, int | None]:
+        return {code: getattr(self, f"wics_{code.lower()}") for code in WICS_CRITERIA}
 
 
 class StepSummary(BaseModel):
@@ -108,6 +120,17 @@ class StepSummary(BaseModel):
 class StepRegression(BaseModel):
     step: int
     drop: float
+
+
+class InputCheckSummary(BaseModel):
+    """Mean WICS scores and decisions for one turn kind in one step."""
+
+    step: int
+    kind: TurnKind
+    turns: int
+    wics: float
+    criteria: dict[str, float]  # mean score per WICS criterion
+    decisions: dict[DecisionType, int]
 
 
 def load_experiment_config(path: str | Path = "configs/experiments/middleware_regression.yaml") -> ExperimentConfig:
@@ -162,6 +185,7 @@ def run_step(
                 kind=turn.kind,
                 message=turn.message,
                 decision=result.decision.decision if result.decision else None,
+                **_input_check_fields(result.wics, result.decision.reasons if result.decision else []),
                 source=result.source,
                 reply=result.reply,
                 persona_score=judgement.score if judgement else None,
@@ -171,6 +195,38 @@ def run_step(
             on_record(record)
             records.append(record)
     return records
+
+
+def _input_check_fields(wics: RubricScore | None, reasons: list[str]) -> dict:
+    if wics is None:
+        return {}
+    criteria = [wics.criteria[code] for code in WICS_CRITERIA]
+    return {
+        "wics_total": wics.weighted_total,
+        **{f"wics_{c.code.lower()}": int(c.score) for c in criteria},
+        "input_check_reasons": "; ".join(reasons),
+        "wics_reasoning": "\n".join(f"{c.code} {c.score:g}: {c.rationale}" for c in criteria),
+    }
+
+
+def summarize_input_checks(records: list[TurnRecord]) -> list[InputCheckSummary]:
+    """Per step and turn kind, the mean WICS scores and the decisions they led to."""
+    summaries = []
+    checked = [r for r in records if r.wics_total is not None]
+    for step in sorted({r.step for r in checked}):
+        for kind in TurnKind:
+            group = [r for r in checked if r.step == step and r.kind == kind]
+            if not group:
+                continue
+            summaries.append(InputCheckSummary(
+                step=step,
+                kind=kind,
+                turns=len(group),
+                wics=round(mean(r.wics_total for r in group), 2),
+                criteria={code: round(mean(r.wics_scores()[code] for r in group), 2) for code in WICS_CRITERIA},
+                decisions={d: sum(r.decision == d for r in group) for d in DecisionType},
+            ))
+    return summaries
 
 
 def summarize_step(step_index: int, name: str, records: list[TurnRecord]) -> StepSummary:

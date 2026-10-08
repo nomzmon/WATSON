@@ -3,7 +3,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from watson.common.schemas import HistoryTurn, ModuleToggles
+from watson.common.schemas import DecisionType, HistoryTurn, ModuleToggles
 from watson.evaluation.middleware_regression import (
     StepConfig,
     StepSummary,
@@ -13,6 +13,7 @@ from watson.evaluation.middleware_regression import (
     load_dialogues,
     load_experiment_config,
     run_step,
+    summarize_input_checks,
     summarize_step,
 )
 from watson.evaluation.persona_consistency import PersonaConsistencyJudge
@@ -108,6 +109,20 @@ def test_input_constraint_step_stops_drift_turns_and_skips_scoring_them():
             assert r.source == "generator"
 
 
+def test_input_check_step_records_the_wics_scores_behind_each_decision():
+    records = run(2)
+
+    drift = next(r for r in records if r.kind.is_drift)
+    assert (drift.wics_total, drift.wics_scores()) == (2.0, {"OOP": 2, "TR": 2, "HC": 2, "GIP": 2})
+    assert "reject band" in drift.input_check_reasons
+    assert drift.wics_reasoning.splitlines() == ["OOP 2: r", "TR 2: r", "HC 2: r", "GIP 2: r"]
+    assert all(r.wics_total == 9.0 for r in records if not r.kind.is_drift)
+
+
+def test_baseline_step_records_no_wics_scores():
+    assert all(r.wics_total is None and r.input_check_reasons == "" for r in run(1))
+
+
 def test_each_step_replays_turns_with_the_same_seeds():
     baseline, guarded = FakeGemma(), FakeGemma()
     run(1, gemma=baseline)
@@ -139,6 +154,20 @@ def test_summary_counts_caught_drift_and_blocked_normal_turns():
     assert summary.normal_blocked == 0
     assert summary.persona_normal == 7.0
     assert summary.persona_drift is None  # every drift turn was stopped before reaching Holmes
+
+
+def test_input_check_summary_gives_mean_scores_and_decisions_per_turn_kind():
+    summaries = {s.kind: s for s in summarize_input_checks(run(2))}
+
+    normal, breaking = summaries[TurnKind.NORMAL], summaries[TurnKind.PERSONA_BREAKING]
+    assert (normal.turns, normal.wics, normal.criteria["GIP"]) == (13, 9.0, 9.0)
+    assert normal.decisions[DecisionType.ACCEPT] == 13
+    assert (breaking.turns, breaking.wics, breaking.decisions[DecisionType.REJECT]) == (2, 2.0, 2)
+    assert list(summaries) == list(TurnKind)  # in turn-kind order
+
+
+def test_input_check_summary_is_empty_without_the_input_constraint_engine():
+    assert summarize_input_checks(run(1)) == []
 
 
 def make_summary(step: int, persona_normal: float | None) -> StepSummary:

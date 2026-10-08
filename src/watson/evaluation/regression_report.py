@@ -9,13 +9,16 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from watson.common.config import PROJECT_ROOT
+from watson.common.schemas import DecisionType
 from watson.evaluation.middleware_regression import (
     ExperimentConfig,
+    InputCheckSummary,
     ScriptedDialogue,
     StepRegression,
     StepSummary,
     TurnRecord,
 )
+from watson.middleware.input_constraint.scoring import WICS_CRITERIA
 
 
 class RunDetails(BaseModel):
@@ -46,6 +49,7 @@ def render_report(
     summaries: Sequence[StepSummary],
     regressions: Sequence[StepRegression],
     records: Sequence[TurnRecord],
+    input_checks: Sequence[InputCheckSummary] = (),
 ) -> str:
     turns = sum(len(d.turns) for d in dialogues)
     lines = [
@@ -82,9 +86,10 @@ def render_report(
         "- **Drift caught:** drift-inducing turns the middleware redirected or rejected.",
         "- **Normal blocked:** normal turns the middleware wrongly redirected or rejected.",
         "",
-        "## Regressions",
-        "",
     ]
+    if input_checks:
+        lines += _input_check_table(input_checks)
+    lines += ["## Regressions", ""]
     if regressions:
         lines += [
             f"- Step {r.step}: persona score on normal turns dropped {r.drop:.2f} from the previous step."
@@ -107,8 +112,37 @@ def render_report(
     return "\n".join(lines)
 
 
+def _input_check_table(summaries: Sequence[InputCheckSummary]) -> list[str]:
+    decisions = list(DecisionType)
+    lines = [
+        "## Input check scores",
+        "",
+        "Mean WICS and criterion scores (1-10) per turn kind, and the decisions they led to.",
+        "",
+        f"| Step | Turn kind | Turns | WICS | {' | '.join(WICS_CRITERIA)} | "
+        f"{' | '.join(d.value.capitalize() for d in decisions)} |",
+        "|---" * (4 + len(WICS_CRITERIA) + len(decisions)) + "|",
+    ]
+    for s in summaries:
+        lines.append(
+            f"| {s.step} | {s.kind.value.replace('_', ' ')} | {s.turns} | {s.wics:.2f} | "
+            + " | ".join(f"{s.criteria[code]:.1f}" for code in WICS_CRITERIA)
+            + " | " + " | ".join(str(s.decisions[d]) for d in decisions) + " |"
+        )
+    lines += [
+        "",
+        "OOP = out-of-persona compatibility, TR = topic relevance, HC = historical consistency, "
+        "GIP = guided input compliance.",
+        "",
+    ]
+    return lines
+
+
 def _turn(record: TurnRecord) -> list[str]:
     outcome = [record.decision.value if record.decision else "no input check"]
+    if record.wics_total is not None:
+        criteria = ", ".join(f"{code} {score}" for code, score in record.wics_scores().items())
+        outcome.append(f"WICS {record.wics_total:.2f} ({criteria})")
     if record.persona_score is not None:
         outcome.append(f"persona {record.persona_score}/10")
     speaker = "Holmes" if record.source in ("generator", "redirect_message") else "System"
@@ -120,6 +154,10 @@ def _turn(record: TurnRecord) -> list[str]:
         *_quote(f"**{speaker}:** {record.reply}"),
         "",
     ]
+    if record.decision not in (None, DecisionType.ACCEPT):
+        # Shows why a turn was not accepted, to guide refinement of the Input Constraint Engine.
+        lines += [f"_Input check: {record.input_check_reasons}._", ""]
+        lines += [f"- {line}" for line in record.wics_reasoning.splitlines()] + [""]
     if record.persona_reasoning:
         lines += [f"_Judge: {record.persona_reasoning}_", ""]
     return lines

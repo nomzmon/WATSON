@@ -34,13 +34,6 @@ def test_generate_passes_extra_options_such_as_seed():
 
     assert client.calls == [{"prompt": "prompt", "stop": ["Visitor:"], "seed": 42}]
 
-def test_generate_passes_extra_options_such_as_seed():
-    client = FakeGemma("Elementary.")
-
-    ResponseGenerator(client, stop=["Visitor:"]).generate("prompt", seed=42)
-
-    assert client.calls == [{"prompt": "prompt", "stop": ["Visitor:"], "seed": 42}]
-
 
 def test_generate_strips_copied_name_label():
     generator = ResponseGenerator(FakeGemma("  Holmes: The butler, of course.  "))
