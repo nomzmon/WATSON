@@ -69,6 +69,10 @@ def run(step_index: int, gemma: FakeGemma | None = None, judge: FakeJudge | None
 def test_repo_config_has_the_two_built_steps():
     assert [step.modules.input_constraint for step in CONFIG.steps] == [False, True]
 
+def test_repo_config_expects_a_decision_for_every_turn_kind():
+    assert set(CONFIG.expected_decisions) == set(TurnKind)
+    assert CONFIG.expected_decisions[TurnKind.OFF_TOPIC] == [DecisionType.REDIRECT]
+    assert DecisionType.ACCEPT in CONFIG.expected_decisions[TurnKind.RUSHING]
 
 def test_every_dialogue_mixes_normal_and_drift_turns():
     assert len(DIALOGUES) == 3
@@ -165,6 +169,19 @@ def test_input_check_summary_gives_mean_scores_and_decisions_per_turn_kind():
     assert (breaking.turns, breaking.wics, breaking.decisions[DecisionType.REJECT]) == (2, 2.0, 2)
     assert list(summaries) == list(TurnKind)  # in turn-kind order
 
+
+def test_input_check_summary_counts_decisions_that_were_as_expected():
+    # The fake judge rejects every drift turn: right for anachronisms, wrong for off-topic turns (redirect).
+    summaries = {s.kind: s for s in summarize_input_checks(run(2), CONFIG.expected_decisions)}
+
+    assert summaries[TurnKind.ANACHRONISM].as_expected == 2
+    assert summaries[TurnKind.OFF_TOPIC].as_expected == 0
+    assert summaries[TurnKind.NORMAL].as_expected == 13
+    assert summaries[TurnKind.OFF_TOPIC].expected == [DecisionType.REDIRECT]
+
+
+def test_without_expectations_nothing_is_counted_as_expected():
+    assert all(s.as_expected is None for s in summarize_input_checks(run(2)))
 
 def test_input_check_summary_is_empty_without_the_input_constraint_engine():
     assert summarize_input_checks(run(1)) == []

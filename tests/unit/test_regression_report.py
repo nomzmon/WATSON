@@ -42,7 +42,7 @@ RECORDS = [
     record(1, TurnKind.PERSONA_BREAKING, "generator", None, 3),
     record(2, TurnKind.PERSONA_BREAKING, "reject_message", DecisionType.REJECT, None, **REJECTED),
 ]
-INPUT_CHECKS = summarize_input_checks(RECORDS)
+INPUT_CHECKS = summarize_input_checks(RECORDS, CONFIG.expected_decisions)
 SUMMARIES = [summarize_step(1, CONFIG.steps[0].name, RECORDS[:1]), summarize_step(2, CONFIG.steps[1].name, RECORDS[1:])]
 
 
@@ -91,8 +91,10 @@ def test_report_shows_why_a_turn_was_not_accepted():
 def test_report_has_input_check_scores_per_turn_kind():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS)
 
-    assert "| Step | Turn kind | Turns | WICS | OOP | TR | HC | GIP | Accept | Rephrase | Redirect | Reject |" in report
-    assert "| 2 | persona breaking | 1 | 2.95 | 1.0 | 2.0 | 9.0 | 3.0 | 0 | 0 | 0 | 1 |" in report
+    assert ("| Step | Turn kind | Turns | WICS | OOP | TR | HC | GIP | Accept | Rephrase | Redirect | Reject "
+            "| Expected | As expected |") in report
+    assert "| 2 | persona breaking | 1 | 2.95 | 1.0 | 2.0 | 9.0 | 3.0 | 0 | 0 | 0 | 1 | reject | 1/1 |" in report
+    assert "**Decisions as expected in step 2:** 1/1" in report
 
 
 def test_report_leaves_out_input_check_scores_when_no_step_has_them():

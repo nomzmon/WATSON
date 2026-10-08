@@ -12,6 +12,16 @@ seed: 42
 # more than this (1-10 scale) compared with the previous step.
 regression_tolerance: 1.0
 
+# DRAFT for group review: the decisions the Input Constraint Engine and Decision
+# Layer should reach for each turn kind (thesis Section 5.2.1.1 and Table 5.2).
+# Rushing turns are about the case; pacing is the Dialogue Flow Manager's job.
+expected_decisions:
+  normal: [accept, rephrase]
+  rushing: [accept, rephrase]
+  off_topic: [redirect]
+  anachronism: [reject]
+  persona_breaking: [reject]
+
 steps:
   - name: persona prompt only
     template: prompts/generation/baseline_persona.txt

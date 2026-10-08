@@ -120,22 +120,32 @@ def _input_check_table(summaries: Sequence[InputCheckSummary]) -> list[str]:
         "Mean WICS and criterion scores (1-10) per turn kind, and the decisions they led to.",
         "",
         f"| Step | Turn kind | Turns | WICS | {' | '.join(WICS_CRITERIA)} | "
-        f"{' | '.join(d.value.capitalize() for d in decisions)} |",
-        "|---" * (4 + len(WICS_CRITERIA) + len(decisions)) + "|",
+        f"{' | '.join(d.value.capitalize() for d in decisions)} | Expected | As expected |",
+        "|---" * (6 + len(WICS_CRITERIA) + len(decisions)) + "|",
     ]
     for s in summaries:
         lines.append(
             f"| {s.step} | {s.kind.value.replace('_', ' ')} | {s.turns} | {s.wics:.2f} | "
             + " | ".join(f"{s.criteria[code]:.1f}" for code in WICS_CRITERIA)
-            + " | " + " | ".join(str(s.decisions[d]) for d in decisions) + " |"
+            + " | " + " | ".join(str(s.decisions[d]) for d in decisions)
+            + f" | {' or '.join(d.value for d in s.expected) or '-'} | {_as_expected(s.as_expected, s.turns)} |"
         )
     lines += [
         "",
         "OOP = out-of-persona compatibility, TR = topic relevance, HC = historical consistency, "
-        "GIP = guided input compliance.",
+        "GIP = guided input compliance. Expected decisions are set in the experiment config.",
         "",
     ]
+    for step in dict.fromkeys(s.step for s in summaries):
+        rated = [s for s in summaries if s.step == step and s.as_expected is not None]
+        if rated:
+            lines += [f"**Decisions as expected in step {step}:** "
+                      f"{sum(s.as_expected for s in rated)}/{sum(s.turns for s in rated)}", ""]
     return lines
+
+
+def _as_expected(count: int | None, turns: int) -> str:
+    return f"{count}/{turns}" if count is not None else "-"
 
 
 def _turn(record: TurnRecord) -> list[str]:

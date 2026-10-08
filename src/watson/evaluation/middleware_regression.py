@@ -76,6 +76,7 @@ class ExperimentConfig(BaseModel):
     dialogues: str
     seed: int
     regression_tolerance: float
+    expected_decisions: dict[TurnKind, list[DecisionType]] = Field(default_factory=dict)
     steps: list[StepConfig] = Field(min_length=1)
 
 
@@ -131,6 +132,8 @@ class InputCheckSummary(BaseModel):
     wics: float
     criteria: dict[str, float]  # mean score per WICS criterion
     decisions: dict[DecisionType, int]
+    expected: list[DecisionType] = Field(default_factory=list)  # empty when the config sets no expectation
+    as_expected: int | None = None  # turns whose decision was one of the expected ones
 
 
 def load_experiment_config(path: str | Path = "configs/experiments/middleware_regression.yaml") -> ExperimentConfig:
@@ -209,8 +212,11 @@ def _input_check_fields(wics: RubricScore | None, reasons: list[str]) -> dict:
     }
 
 
-def summarize_input_checks(records: list[TurnRecord]) -> list[InputCheckSummary]:
-    """Per step and turn kind, the mean WICS scores and the decisions they led to."""
+def summarize_input_checks(
+    records: list[TurnRecord], expected_decisions: dict[TurnKind, list[DecisionType]] | None = None
+) -> list[InputCheckSummary]:
+    """Per step and turn kind, the mean WICS scores, the decisions they led to and how many were as expected."""
+    expected_decisions = expected_decisions or {}
     summaries = []
     checked = [r for r in records if r.wics_total is not None]
     for step in sorted({r.step for r in checked}):
@@ -218,6 +224,7 @@ def summarize_input_checks(records: list[TurnRecord]) -> list[InputCheckSummary]
             group = [r for r in checked if r.step == step and r.kind == kind]
             if not group:
                 continue
+            expected = expected_decisions.get(kind, [])
             summaries.append(InputCheckSummary(
                 step=step,
                 kind=kind,
@@ -225,6 +232,8 @@ def summarize_input_checks(records: list[TurnRecord]) -> list[InputCheckSummary]
                 wics=round(mean(r.wics_total for r in group), 2),
                 criteria={code: round(mean(r.wics_scores()[code] for r in group), 2) for code in WICS_CRITERIA},
                 decisions={d: sum(r.decision == d for r in group) for d in DecisionType},
+                expected=expected,
+                as_expected=sum(r.decision in expected for r in group) if expected else None,
             ))
     return summaries
 

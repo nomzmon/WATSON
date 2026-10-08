@@ -17,6 +17,7 @@ from datetime import datetime
 
 from watson.common.config import get_settings, resolve_path
 from watson.evaluation.middleware_regression import (
+    InputCheckSummary,
     StepRegression,
     StepSummary,
     TurnRecord,
@@ -25,6 +26,7 @@ from watson.evaluation.middleware_regression import (
     load_dialogues,
     load_experiment_config,
     run_step,
+    summarize_input_checks,
     summarize_step,
 )
 from watson.evaluation.persona_consistency import PersonaConsistencyJudge
@@ -71,6 +73,10 @@ def main() -> None:
             writer.writerow(r.model_dump(mode="json"))
             f.flush()
             outcome = f"persona {r.persona_score}/10" if r.persona_score else r.source.replace("_", " ")
+            if r.wics_total is not None:
+                criteria = " ".join(f"{code} {score}" for code, score in r.wics_scores().items())
+                persona = f" -> persona {r.persona_score}/10" if r.persona_score else ""
+                outcome = f"{r.decision.value}, WICS {r.wics_total:.2f} ({criteria}){persona}"
             print(f"  {r.dialogue_id} turn {r.turn} [{r.kind.value}]: {outcome}")
 
         for index, step in enumerate(config.steps, start=1):
@@ -81,14 +87,22 @@ def main() -> None:
             all_records += records
 
     regressions = find_regressions(summaries, config.regression_tolerance)
+    input_checks = summarize_input_checks(all_records, config.expected_decisions)
     print_report(summaries, regressions, config.regression_tolerance)
+    print_input_checks(input_checks)
     (out_dir / "summary.json").write_text(
-        json.dumps([s.model_dump() for s in summaries], indent=2), encoding="utf-8"
+        json.dumps(
+            {"steps": [s.model_dump() for s in summaries],
+             "input_checks": [s.model_dump(mode="json") for s in input_checks]},
+            indent=2,
+        ),
+        encoding="utf-8",
     )
     report_path = resolve_path(f"experiments/middleware_regression/reports/{started:%Y-%m-%d_%H%M}_report.md")
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(
-        render_report(details, config, dialogues, summaries, regressions, all_records), encoding="utf-8"
+        render_report(details, config, dialogues, summaries, regressions, all_records, input_checks),
+        encoding="utf-8",
     )
     print(f"\nEvery turn, reply and the judge's reasoning: {out_dir / 'turns.csv'}")
     print(f"Report for your documentation (commit this): {report_path}")
@@ -115,6 +129,24 @@ def print_report(summaries: list[StepSummary], regressions: list[StepRegression]
         print("  none")
     for r in regressions:
         print(f"  step {r.step} dropped {r.drop:.2f}")
+
+
+def print_input_checks(summaries: list[InputCheckSummary]) -> None:
+    if not summaries:
+        return
+    print("\nInput check scores (mean per turn kind; decisions accept/rephrase/redirect/reject):")
+    print(f"{'Step':<6}{'Turn kind':<18}{'Turns':>6}{'WICS':>7}{'OOP':>6}{'TR':>6}{'HC':>6}{'GIP':>6}"
+          f"   Decisions   As expected")
+    for s in summaries:
+        decisions = "/".join(str(count) for count in s.decisions.values())
+        as_expected = f"{s.as_expected}/{s.turns}" if s.as_expected is not None else "-"
+        print(f"{s.step:<6}{s.kind.value:<18}{s.turns:>6}{s.wics:>7.2f}"
+              + "".join(f"{score:>6.1f}" for score in s.criteria.values()) + f"   {decisions:<12}{as_expected}")
+    for step in dict.fromkeys(s.step for s in summaries):
+        rated = [s for s in summaries if s.step == step and s.as_expected is not None]
+        if rated:
+            print(f"Decisions as expected in step {step}: "
+                  f"{sum(s.as_expected for s in rated)}/{sum(s.turns for s in rated)}")
 
 
 if __name__ == "__main__":
