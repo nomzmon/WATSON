@@ -2,7 +2,7 @@
 # Each step adds one middleware component to the previous step. Every step
 # replays the same scripted conversations with the same seeds, so a change in
 # the results comes from the added component. Add a step here each time a new
-# component is built: the Dialogue Flow Manager next, then Output Validation.
+# component is built: the Output Validation Engine next.
 
 profile: tests/fixtures/holmes_profile_sample.json  # stand-in until the knowledge-base team delivers the validated profile
 dialogues: data/scenarios/scripted_dialogues
@@ -32,3 +32,19 @@ steps:
     modules:
       input_constraint: true
       decision_layer: true
+
+  # Prompt Builder's structured prompt: adds the case details, the stage and a
+  # guidance section. Without the Dialogue Flow Manager the stage reads "not yet
+  # tracked" and there is no guidance, so this step isolates the case context.
+  - name: + structured prompt (case context)
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+
+  - name: + dialogue flow manager
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true

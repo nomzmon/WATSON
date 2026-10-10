@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import BaseModel
 
@@ -12,12 +13,14 @@ from watson.common.config import PROJECT_ROOT
 from watson.common.schemas import DecisionType
 from watson.evaluation.middleware_regression import (
     ExperimentConfig,
+    FlowSummary,
     InputCheckSummary,
     ScriptedDialogue,
     StepRegression,
     StepSummary,
     TurnRecord,
 )
+from watson.middleware.dialogue_flow.flow_evaluator import DFMS_CRITERIA
 from watson.middleware.input_constraint.scoring import WICS_CRITERIA
 
 
@@ -50,6 +53,7 @@ def render_report(
     regressions: Sequence[StepRegression],
     records: Sequence[TurnRecord],
     input_checks: Sequence[InputCheckSummary] = (),
+    flow_summaries: Sequence[FlowSummary] = (),
 ) -> str:
     turns = sum(len(d.turns) for d in dialogues)
     lines = [
@@ -67,15 +71,18 @@ def render_report(
         "",
         "## Results by step",
         "",
-        "| Step | Name | Components enabled | Persona (normal turns) | Persona (drift turns) | Drift caught "
-        "| Normal blocked | Avg time per turn |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Step | Name | Prompt | Components enabled | Persona (normal turns) | Persona (drift turns) "
+        "| Narrative (normal turns) | Repetition | Drift caught | Normal blocked | Avg time per turn |",
+        "|---|---|---|---|---|---|---|---|---|---|---|",
     ]
-    for summary, step in zip(summaries, config.steps):
+    steps = {summary.step: config.steps[summary.step - 1] for summary in summaries}
+    for summary in summaries:
+        step = steps[summary.step]
         enabled = [name.replace("_", " ") for name, on in step.modules.model_dump().items() if on]
         lines.append(
-            f"| {summary.step} | {summary.name} | {', '.join(enabled) or 'none'} "
+            f"| {summary.step} | {summary.name} | {Path(step.template).stem} | {', '.join(enabled) or 'none'} "
             f"| {_score(summary.persona_normal)} | {_score(summary.persona_drift)} "
+            f"| {_score(summary.narrative_normal)} | {_score(summary.repetition)} "
             f"| {summary.drift_caught}/{summary.drift_total} | {summary.normal_blocked}/{summary.normal_total} "
             f"| {summary.mean_latency_ms / 1000:.1f} s |"
         )
@@ -83,12 +90,18 @@ def render_report(
         "",
         "- **Persona (normal turns):** mean persona score (1-10) of Holmes' replies to normal and rushing turns.",
         "- **Persona (drift turns):** the same for drift-inducing turns that still reached Holmes.",
+        "- **Narrative (normal turns):** mean narrative consistency score (1-10) of Holmes' replies to normal and "
+        "rushing turns: true to the case, moving the investigation forward, naturally paced.",
+        "- **Repetition:** mean share (0-1) of each reply's three-word sequences already used in Holmes' earlier "
+        "replies in the same conversation.",
         "- **Drift caught:** drift-inducing turns the middleware redirected or rejected.",
         "- **Normal blocked:** normal turns the middleware wrongly redirected or rejected.",
         "",
     ]
     if input_checks:
         lines += _input_check_table(input_checks)
+    if flow_summaries:
+        lines += _flow_table(flow_summaries)
     lines += ["## Regressions", ""]
     if regressions:
         lines += [
@@ -144,6 +157,32 @@ def _input_check_table(summaries: Sequence[InputCheckSummary]) -> list[str]:
     return lines
 
 
+def _flow_table(summaries: Sequence[FlowSummary]) -> list[str]:
+    lines = [
+        "## Dialogue flow",
+        "",
+        "Mean DFMS and criterion scores (1-10) given by the Dialogue Flow Manager before each reply, how many "
+        "replies it added guidance to beyond the stage constraint, and the stage each conversation ended at.",
+        "",
+        f"| Step | Turns | DFMS | {' | '.join(DFMS_CRITERIA)} | Guided turns | Final stages |",
+        "|---" * (5 + len(DFMS_CRITERIA)) + "|",
+    ]
+    for s in summaries:
+        stages = ", ".join(f"{dialogue}: {stage.value}" for dialogue, stage in s.final_stages.items())
+        lines.append(
+            f"| {s.step} | {s.turns} | {s.dfms:.2f} | "
+            + " | ".join(f"{s.criteria[code]:.1f}" for code in DFMS_CRITERIA)
+            + f" | {s.guided_turns}/{s.turns} | {stages} |"
+        )
+    lines += [
+        "",
+        "CST = conversation state tracking, NP = narrative progression, CC = context continuity, "
+        "TBC = topic boundary control.",
+        "",
+    ]
+    return lines
+
+
 def _as_expected(count: int | None, turns: int) -> str:
     return f"{count}/{turns}" if count is not None else "-"
 
@@ -153,8 +192,13 @@ def _turn(record: TurnRecord) -> list[str]:
     if record.wics_total is not None:
         criteria = ", ".join(f"{code} {score}" for code, score in record.wics_scores().items())
         outcome.append(f"WICS {record.wics_total:.2f} ({criteria})")
+    if record.dfms_total is not None:
+        criteria = ", ".join(f"{code} {score}" for code, score in record.dfms_scores().items())
+        outcome.append(f"stage {record.stage.value}, DFMS {record.dfms_total:.2f} ({criteria})")
     if record.persona_score is not None:
         outcome.append(f"persona {record.persona_score}/10")
+    if record.narrative_score is not None:
+        outcome.append(f"narrative {record.narrative_score}/10")
     speaker = "Holmes" if record.source in ("generator", "redirect_message") else "System"
     lines = [
         f"**Turn {record.turn}** · {record.kind.value.replace('_', ' ')} · {' · '.join(outcome)}",
@@ -168,8 +212,12 @@ def _turn(record: TurnRecord) -> list[str]:
         # Shows why a turn was not accepted, to guide refinement of the Input Constraint Engine.
         lines += [f"_Input check: {record.input_check_reasons}._", ""]
         lines += [f"- {line}" for line in record.wics_reasoning.splitlines()] + [""]
+    if record.guidance:
+        lines += [f"_Guidance added: {record.guidance}._", ""]
     if record.persona_reasoning:
         lines += [f"_Judge: {record.persona_reasoning}_", ""]
+    if record.narrative_reasoning:
+        lines += [f"_Narrative judge: {record.narrative_reasoning}_", ""]
     return lines
 
 

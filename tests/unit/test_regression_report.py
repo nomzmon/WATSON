@@ -1,12 +1,13 @@
 from datetime import datetime
 
-from watson.common.schemas import DecisionType
+from watson.common.schemas import DecisionType, DialogueStage
 from watson.evaluation.middleware_regression import (
     StepRegression,
     TurnKind,
     TurnRecord,
     load_dialogues,
     load_experiment_config,
+    summarize_dialogue_flow,
     summarize_input_checks,
     summarize_step,
 )
@@ -38,12 +39,20 @@ REJECTED = dict(
     input_check_reasons="WICS 2.95 is in the reject band; lowest criterion OOP=1 is in the reject band",
     wics_reasoning="OOP 1: Asks Holmes to drop his role.\nTR 2: Not about the case.\nHC 9: Fine.\nGIP 3: Unclear.",
 )
+GUIDED = dict(
+    wics_total=9.0, wics_oop=9, wics_tr=9, wics_hc=9, wics_gip=9,
+    stage=DialogueStage.EVIDENCE, dfms_total=6.65, dfms_cst=8, dfms_np=3, dfms_cc=8, dfms_tbc=9,
+    guidance="DS-EVIDENCE (level 1), NP-NO-PREMATURE-CONCLUSION (level 1)",
+    narrative_score=5, narrative_reasoning="Invents a witness.", repetition=0.25,
+)
 RECORDS = [
     record(1, TurnKind.PERSONA_BREAKING, "generator", None, 3),
     record(2, TurnKind.PERSONA_BREAKING, "reject_message", DecisionType.REJECT, None, **REJECTED),
+    record(4, TurnKind.NORMAL, "generator", DecisionType.ACCEPT, 8, **GUIDED),
 ]
 INPUT_CHECKS = summarize_input_checks(RECORDS, CONFIG.expected_decisions)
-SUMMARIES = [summarize_step(1, CONFIG.steps[0].name, RECORDS[:1]), summarize_step(2, CONFIG.steps[1].name, RECORDS[1:])]
+FLOWS = summarize_dialogue_flow(RECORDS)
+SUMMARIES = [summarize_step(r.step, CONFIG.steps[r.step - 1].name, [r]) for r in RECORDS]
 
 
 def test_report_records_how_the_run_was_made():
@@ -58,8 +67,10 @@ def test_report_records_how_the_run_was_made():
 def test_report_has_a_row_per_step_with_its_components():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
 
-    assert "| 1 | persona prompt only | none | - | 3.00 | 0/1 | 0/0 | 2.0 s |" in report
-    assert "| 2 | + input constraint and decision layer | input constraint, decision layer |" in report
+    assert "| 1 | persona prompt only | baseline_persona | none | - | 3.00 | - | - | 0/1 | 0/0 | 2.0 s |" in report
+    assert "| 2 | + input constraint and decision layer | baseline_persona | input constraint, decision layer |" in report
+    assert ("| 4 | + dialogue flow manager | structured_prompt | input constraint, dialogue flow, decision layer "
+            "| 8.00 | - | 5.00 | 0.25 | 0/0 | 0/1 | 2.0 s |") in report
 
 
 def test_report_lists_regressions_or_says_there_were_none():
@@ -99,6 +110,25 @@ def test_report_has_input_check_scores_per_turn_kind():
 
 def test_report_leaves_out_input_check_scores_when_no_step_has_them():
     assert "## Input check scores" not in render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
+
+
+def test_report_has_a_dialogue_flow_table():
+    report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS)
+
+    assert "| Step | Turns | DFMS | CST | NP | CC | TBC | Guided turns | Final stages |" in report
+    assert "| 4 | 1 | 6.65 | 8.0 | 3.0 | 8.0 | 9.0 | 1/1 | dialogue_02: evidence |" in report
+
+
+def test_report_shows_the_dialogue_flow_and_narrative_score_of_each_turn():
+    report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS)
+
+    assert "stage evidence, DFMS 6.65 (CST 8, NP 3, CC 8, TBC 9) · persona 8/10 · narrative 5/10" in report
+    assert "_Guidance added: DS-EVIDENCE (level 1), NP-NO-PREMATURE-CONCLUSION (level 1)._" in report
+    assert "_Narrative judge: Invents a witness._" in report
+
+
+def test_report_leaves_out_the_dialogue_flow_table_without_the_dialogue_flow_manager():
+    assert "## Dialogue flow" not in render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS)
 
 
 def test_report_leaves_space_for_the_group_s_observations():
