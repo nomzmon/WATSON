@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Consulting Room, 221B Baker Street</title>
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#16221d; --wall-2:#1c2c25; --panel:#233a30; --line:#3a5246;
+  --ink:#ebe5d6; --muted:#a9b4a8; --brass:#c9a35b; --brass-ink:#1a1608;
+  --oxblood:#6b2a35; --oxblood-ink:#f6e9e6; --danger:#f0a090;
+  --display:"IM Fell English","Iowan Old Style",Georgia,serif;
+  --text:"Source Serif 4","Iowan Old Style",Georgia,serif;
+  --typewriter:ui-monospace,"Courier New",monospace;
+  box-sizing:border-box;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;height:100%;background:var(--wall);color:var(--ink);
+  font:400 1.0625rem/1.6 var(--text);
+  background-image:radial-gradient(70% 38% at 50% 0%,rgba(201,163,91,.13),transparent 72%);
+  background-repeat:no-repeat;
+}
+[hidden]{display:none!important}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+.btn{
+  border:1px solid var(--brass);background:transparent;color:var(--brass);
+  padding:.55rem 1.1rem;border-radius:4px;cursor:pointer;font-weight:600;font-size:.95rem;
+}
+.btn:hover{background:rgba(201,163,91,.12)}
+.btn.primary{background:var(--brass);color:var(--brass-ink)}
+.btn.primary:hover{background:#d8b46c}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.quiet{border-color:var(--line);color:var(--muted)}
+.btn.quiet:hover{border-color:var(--muted);color:var(--ink)}
+
+/* ---------- screens ---------- */
+.screen{height:100%;display:flex;flex-direction:column}
+.center{align-items:center;justify-content:center;padding:1.5rem}
+
+/* ---------- visitor's book (start) ---------- */
+.book{width:min(100%,32rem);border:1px solid var(--line);border-top:3px solid var(--brass);background:var(--wall-2);padding:2.25rem clamp(1.25rem,5vw,2.5rem)}
+.book h1{font:400 clamp(2rem,6vw,2.75rem)/1.1 var(--display);margin:0 0 .35rem}
+.book .sub{color:var(--brass);font-family:var(--display);font-style:italic;margin:0 0 1.5rem}
+.book p{margin:0 0 1.25rem;color:var(--muted)}
+.book p strong{color:var(--ink);font-weight:600}
+label.field{display:block;font-weight:600;margin-bottom:.35rem}
+.hint{font-size:.9rem;color:var(--muted);margin:0 0 .5rem;font-weight:400}
+input[type=text]{
+  width:100%;padding:.65rem .8rem;background:var(--wall);border:1px solid var(--line);border-radius:4px;
+  font-size:1.05rem;letter-spacing:.02em;
+}
+.err{color:var(--danger);font-size:.9rem;margin:.25rem 0 1rem;min-height:1.4em}
+.check{display:flex;gap:.7rem;align-items:flex-start;margin:1.25rem 0 .25rem;font-size:.95rem}
+.check input{margin-top:.35rem;accent-color:var(--brass);width:1.05rem;height:1.05rem;flex:none}
+
+/* ---------- chat ---------- */
+.bar{max-width:46rem;width:100%;margin:0 auto;padding:0 1.25rem}
+header.top{padding-top:1rem}
+header.top .row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-bottom:.8rem}
+.who h2{font:400 1.5rem/1.1 var(--display);margin:0}
+.who span{font-size:.85rem;color:var(--muted)}
+.tools{display:flex;align-items:center;gap:.9rem;font-size:.85rem;color:var(--muted);text-align:right}
+.disclosure{
+  display:flex;gap:.6rem;align-items:baseline;font-size:.88rem;color:var(--ink);
+  border:1px solid var(--brass);border-radius:4px;padding:.45rem .8rem;background:rgba(201,163,91,.08);
+}
+.disclosure b{color:var(--brass);font-weight:600;white-space:nowrap}
+#log{flex:1;overflow-y:auto;padding:1.5rem 0 1rem;scroll-behavior:smooth}
+#log .bar{display:flex;flex-direction:column;gap:1.4rem}
+.empty{color:var(--muted);font-style:italic;margin:2.5rem 0;max-width:30rem}
+.msg{max-width:88%}
+.msg .meta{font-size:.8rem;color:var(--muted);margin-bottom:.2rem}
+.msg .body{white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.holmes{align-self:flex-start;border-left:2px solid var(--brass);padding-left:1rem}
+.msg.holmes .meta b{color:var(--brass);font-family:var(--display);font-size:.95rem;font-weight:400;margin-right:.4rem}
+.msg.visitor{align-self:flex-end;background:var(--oxblood);color:var(--oxblood-ink);padding:.7rem 1rem;border-radius:10px 10px 2px 10px}
+.msg.visitor .meta{color:#d9bdb8;text-align:right}
+.notice{
+  align-self:stretch;max-width:100%;font-family:var(--typewriter);font-size:.88rem;line-height:1.55;
+  border:1px dashed var(--muted);padding:.7rem 1rem;color:var(--ink);background:rgba(255,255,255,.03);
+}
+.notice .meta{font-family:var(--text);font-size:.8rem;color:var(--muted);margin-bottom:.15rem;font-weight:600}
+.closing{align-self:center;color:var(--muted);font-size:.92rem;font-style:italic}
+.thinking{align-self:flex-start;color:var(--muted);font-style:italic;border-left:2px solid var(--line);padding-left:1rem}
+.thinking i{display:inline-block;animation:pulse 1.4s ease-in-out infinite;font-style:normal}
+.thinking i:nth-child(2){animation-delay:.2s}.thinking i:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+.msg.in{animation:settle .35s ease-out}
+@keyframes settle{from{opacity:0;transform:translateY(6px)}}
+
+footer.compose{padding:.75rem 0 1rem;border-top:1px solid var(--line);background:var(--wall)}
+.compose form{display:flex;gap:.7rem;align-items:flex-end}
+textarea{
+  flex:1;resize:none;max-height:10rem;min-height:2.9rem;padding:.65rem .85rem;line-height:1.45;
+  background:var(--wall-2);border:1px solid var(--line);border-radius:6px;
+}
+textarea:disabled{opacity:.55}
+.compose .help{font-size:.8rem;color:var(--muted);margin:.45rem 0 0}
+
+/* ---------- dialog ---------- */
+dialog{background:var(--wall-2);color:var(--ink);border:1px solid var(--brass);border-radius:6px;padding:1.5rem;max-width:min(24rem,calc(100% - 2rem))}
+dialog::backdrop{background:rgba(8,14,11,.72)}
+dialog h3{font:400 1.5rem/1.2 var(--display);margin:0 0 .5rem}
+dialog p{margin:0 0 1.25rem;color:var(--muted)}
+dialog .actions{display:flex;gap:.7rem;justify-content:flex-end;flex-wrap:wrap}
+
+/* ---------- end ---------- */
+.end{width:min(100%,30rem);text-align:left}
+.end h1{font:400 2.25rem/1.1 var(--display);margin:0 0 .75rem}
+.end p{color:var(--muted);margin:0 0 1.5rem}
+.end p b{color:var(--ink);font-weight:600}
+a.btn{display:inline-block;text-decoration:none}
+
+@media (max-width:34rem){
+  header.top .row{flex-direction:column;align-items:flex-start;gap:.6rem}
+  .tools{width:100%;justify-content:space-between;text-align:left}
+  .msg{max-width:95%}
+  .compose .btn{padding-inline:.9rem}
+}
+@media (prefers-reduced-motion:reduce){
+  #log{scroll-behavior:auto}.msg.in,.thinking i{animation:none}
+}
+</style>
+</head>
+<body>
+
+<!-- 1. Participant ID entry + AI disclosure -->
+<main id="start" class="screen center">
+  <section class="book" aria-labelledby="t-start">
+    <h1 id="t-start">Visit 221B Baker Street</h1>
+    <p class="sub">Mr. Sherlock Holmes, consulting detective</p>
+    <p>You will play a client who brings a case to Mr. Holmes. Describe it in your own words and answer his questions as the conversation unfolds.</p>
+    <p><strong>Mr. Holmes is an AI character, not a real person.</strong> Your messages and its replies are recorded for this research study and stored under your participant ID only.</p>
+    <form id="startForm" novalidate>
+      <label class="field" for="pid">Participant ID (optional)
+        <span class="hint" style="display:block">If the researcher gave you an ID, enter it here, for example P-014.</span>
+      </label>
+      <input id="pid" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20">
+      <label class="check"><input type="checkbox" id="ack"><span>I understand that I am talking to an AI and that this conversation will be recorded for the study.</span></label>
+      <p id="ackErr" class="err" role="alert"></p>
+      <button class="btn primary" type="submit">Begin session</button>
+    </form>
+  </section>
+</main>
+
+<!-- 2. Chat -->
+<div id="chat" class="screen" hidden>
+  <header class="top">
+    <div class="bar">
+      <div class="row">
+        <div class="who"><h2>Mr. Sherlock Holmes</h2><span>221B Baker Street</span></div>
+        <div class="tools">
+          <span id="count" aria-live="polite"></span>
+          <button class="btn quiet" id="endBtn" type="button">End session</button>
+        </div>
+      </div>
+      <div class="disclosure" role="note"><b>AI character</b><span>You are talking with an AI playing Sherlock Holmes, not a real person.</span></div>
+    </div>
+  </header>
+
+  <div id="log" role="log" aria-live="polite" aria-label="Conversation with Mr. Holmes">
+    <div class="bar" id="thread">
+      <p class="empty" id="empty">You have called at Baker Street with a case. Tell Mr. Holmes what brought you here.</p>
+    </div>
+  </div>
+
+  <footer class="compose">
+    <div class="bar">
+      <form id="msgForm">
+        <textarea id="input" rows="1" maxlength="1000" placeholder="Speak to Mr. Holmes" aria-label="Your message"></textarea>
+        <button class="btn primary" id="send" type="submit" disabled>Send</button>
+      </form>
+      <p class="help" id="help">Enter to send, Shift+Enter for a new line.</p>
+    </div>
+  </footer>
+</div>
+
+<!-- 3. Session ended -->
+<main id="end" class="screen center" hidden>
+  <section class="end">
+    <h1>Session ended</h1>
+    <p>Thank you<b id="endPid"></b>. You used <b id="endCount"></b> in this conversation. Please complete the questionnaire for this session next.</p>
+    <a class="btn primary" id="qLink" href="#">Open questionnaire</a>
+  </section>
+</main>
+
+<dialog id="confirm" aria-labelledby="c-title">
+  <form method="dialog">
+    <h3 id="c-title">End this session?</h3>
+    <p>You will not be able to return to this conversation afterwards.</p>
+    <div class="actions">
+      <button class="btn quiet" value="stay">Keep talking</button>
+      <button class="btn primary" value="end">End session</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* ============================================================
+   Configuration
+   - The system configuration (C1–C4) is assigned and applied by the
+     backend. It is deliberately NOT part of this UI, so participants
+     stay blind to condition.
+   ============================================================ */
+const CONFIG = {
+  MAX_EXCHANGES: 12,        // placeholder: match the turn limit used in the study
+  QUESTIONNAIRE_URL: '#'    // placeholder: link to the post-session questionnaire
+};
+
+/* ============================================================
+   Backend contract (replace the mock below when connecting).
+   POST /api/chat
+     { session_id, participant_id (may be null), message }
+   -> { kind: "holmes" | "notice", text }
+     "holmes" = Holmes' reply (includes Redirect, which is in his voice)
+     "notice" = a system notice from the Decision Layer's Reject path
+   ============================================================ */
+async function sendToWatson({ sessionId, participantId, message }) {
+  /* --- MOCK: remove once the API is connected --- */
+  await new Promise(r => setTimeout(r, 1200 + Math.random() * 1400));
+  if (/bitcoin|iphone|tiktok|chatgpt|python|recipe/i.test(message))
+    return { kind: 'notice', text: '[System notice] This request cannot be processed in the Sherlock Holmes role-play. Please continue with a question about the case.' };
+  if (/weather|football|movie|music/i.test(message))
+    return { kind: 'holmes', text: 'A diverting thought, but it brings us not one step nearer the truth of this affair. Let us return to the matter at hand.' };
+  const lines = [
+    'Pray be seated, and tell me the matter from the beginning. Omit nothing, however trivial it may seem. The trivial is so often the key.',
+    'Interesting. You say it began on Tuesday. Who else was in the house at the time, and who knew of your movements that evening?',
+    'You have told me what you saw. Now tell me what you did not see, for I find the absences more instructive than the presences.',
+    'There is a small inconsistency in your account, though I do not suggest you have misled me. Go over the sequence once more, slowly.'
+  ];
+  const n = document.querySelectorAll('.msg.holmes').length;
+  return { kind: 'holmes', text: lines[n % lines.length] };
+  /* --- /MOCK --- */
+}
+
+/* ============================================================ */
+const $ = s => document.querySelector(s);
+const state = { pid: '', sessionId: '', exchanges: 0, busy: false, over: false };
+const els = {
+  start: $('#start'), chat: $('#chat'), end: $('#end'), thread: $('#thread'), log: $('#log'),
+  input: $('#input'), send: $('#send'), count: $('#count'), help: $('#help'), endBtn: $('#endBtn'),
+  confirm: $('#confirm'), pid: $('#pid'), ackErr: $('#ackErr')
+};
+const HELP = 'Enter to send, Shift+Enter for a new line.';
+const time = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const plural = n => `${n} ${n === 1 ? 'exchange' : 'exchanges'}`;
+
+function show(which) {
+  for (const k of ['start', 'chat', 'end']) els[k].hidden = k !== which;
+}
+function updateCount() {
+  els.count.textContent = `${state.exchanges} of ${CONFIG.MAX_EXCHANGES} exchanges used`;
+}
+function scrollDown() { els.log.scrollTop = els.log.scrollHeight; }
+
+function addMessage(kind, text) {
+  $('#empty')?.remove();
+  const el = document.createElement('article');
+  el.className = 'msg in ' + (kind === 'notice' ? 'notice' : kind);
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  if (kind === 'holmes') meta.innerHTML = '<b>Mr. Holmes</b>';
+  else if (kind === 'visitor') meta.append('You ');
+  else meta.append('System notice ');
+  meta.append(time());
+  const body = document.createElement('div');
+  body.className = 'body';
+  body.textContent = kind === 'notice' ? text.replace(/^\s*\[System notice\]\s*/i, '') : text;
+  el.append(meta, body);
+  els.thread.append(el);
+  scrollDown();
+  return el;
+}
+
+function setBusy(b) {
+  state.busy = b;
+  els.input.disabled = b || state.over;
+  syncSend();
+}
+function syncSend() {
+  els.send.disabled = state.busy || state.over || !els.input.value.trim();
+}
+function autosize() {
+  els.input.style.height = 'auto';
+  els.input.style.height = Math.min(els.input.scrollHeight, 160) + 'px';
+}
+
+/* ---------- start ---------- */
+$('#startForm').addEventListener('submit', e => {
+  e.preventDefault();
+  // Participant ID is optional for now; a blank ID is sent to the backend as null.
+  const id = els.pid.value.trim().toUpperCase();
+  if (!$('#ack').checked) {
+    els.ackErr.textContent = 'Tick the box to confirm you understand this is an AI and the conversation is recorded.';
+    $('#ack').focus();
+    return;
+  }
+  els.ackErr.textContent = '';
+  state.pid = id;
+  state.sessionId = crypto.randomUUID ? crypto.randomUUID() : String(Date.now());
+  updateCount();
+  show('chat');
+  els.input.focus();
+});
+
+/* ---------- send ---------- */
+async function submitMessage() {
+  const text = els.input.value.trim();
+  if (!text || state.busy || state.over) return;
+  addMessage('visitor', text);
+  els.input.value = ''; autosize();
+  state.exchanges++; updateCount();
+  setBusy(true);
+
+  const wait = document.createElement('div');
+  wait.className = 'thinking';
+  wait.innerHTML = 'Mr. Holmes is considering the matter <i>.</i><i>.</i><i>.</i>';
+  els.thread.append(wait); scrollDown();
+
+  try {
+    const reply = await sendToWatson({ sessionId: state.sessionId, participantId: state.pid || null, message: text });
+    wait.remove();
+    addMessage(reply.kind === 'notice' ? 'notice' : 'holmes', reply.text);
+  } catch (err) {
+    wait.remove();
+    addMessage('notice', 'Mr. Holmes could not be reached. Your message was not delivered. Send it again, or tell the researcher if this keeps happening.');
+    state.exchanges--; updateCount();
+  }
+
+  if (state.exchanges >= CONFIG.MAX_EXCHANGES) {
+    state.over = true;
+    const c = document.createElement('p');
+    c.className = 'closing';
+    c.textContent = 'That was your final exchange. End the session to continue.';
+    els.thread.append(c); scrollDown();
+    els.input.placeholder = 'The conversation has reached its limit';
+    els.help.textContent = 'Select End session when you are ready to move on.';
+    els.endBtn.classList.remove('quiet'); els.endBtn.classList.add('primary');
+    setBusy(false);
+    els.endBtn.focus();
+  } else {
+    setBusy(false);
+    els.input.focus();
+  }
+}
+$('#msgForm').addEventListener('submit', e => { e.preventDefault(); submitMessage(); });
+els.input.addEventListener('input', () => { autosize(); syncSend(); });
+els.input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); submitMessage(); }
+});
+
+/* ---------- end ---------- */
+els.endBtn.addEventListener('click', () => els.confirm.showModal());
+els.confirm.addEventListener('close', () => {
+  if (els.confirm.returnValue !== 'end') { if (!state.over) els.input.focus(); return; }
+  $('#endPid').textContent = state.pid ? ', ' + state.pid : '';
+  $('#endCount').textContent = plural(state.exchanges);
+  $('#qLink').href = CONFIG.QUESTIONNAIRE_URL;
+  show('end');
+  // POST /api/session/end { session_id } goes here when connected
+});
+els.confirm.addEventListener('click', e => { if (e.target === els.confirm) els.confirm.close('stay'); });
+</script>
+</body>
+</html>
