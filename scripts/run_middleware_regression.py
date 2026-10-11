@@ -88,7 +88,8 @@ def main() -> None:
                 criteria = " ".join(f"{code} {score}" for code, score in r.wics_scores().items())
                 parts.append(f"{r.decision.value}, WICS {r.wics_total:.2f} ({criteria})")
             if r.dfms_total is not None:
-                parts.append(f"{r.stage.value}, DFMS {r.dfms_total:.2f}")
+                proposed = f" (proposed {r.proposed_stage.value})" if r.proposed_stage != r.stage else ""
+                parts.append(f"{r.stage.value}{proposed}, DFMS {r.dfms_total:.2f}")
             if r.persona_score is not None:
                 parts.append(f"persona {r.persona_score}/10, narrative {r.narrative_score}/10")
             else:
@@ -182,6 +183,8 @@ def print_flows(summaries: list[FlowSummary]) -> None:
         stages = ", ".join(f"{dialogue}: {stage.value}" for dialogue, stage in s.final_stages.items())
         print(f"{s.step:<6}{s.turns:>6}{s.dfms:>7.2f}" + "".join(f"{v:>6.1f}" for v in s.criteria.values())
               + f"{f'{s.guided_turns}/{s.turns}':>9}   {stages}")
+        proposed = ", ".join(f"{stage.value} {count}" for stage, count in s.proposed_stages.items())
+        print(f"{'':<6}Stages the judge proposed: {proposed or '-'}")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,10 @@ score on normal turns falls compared with the previous step.
 
 from __future__ import annotations
 
+import csv
 import re
+import types
+import typing
 from collections.abc import Callable
 from enum import StrEnum
 from pathlib import Path
@@ -20,7 +23,7 @@ from statistics import mean
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from watson.common.config import load_text, load_yaml, resolve_path
-from watson.common.schemas import DecisionType, DialogueStage, ModuleToggles, RubricScore
+from watson.common.schemas import DecisionType, DialogueStage, HistoryTurn, ModuleToggles, RubricScore
 from watson.evaluation.narrative_consistency import NarrativeConsistencyJudge
 from watson.evaluation.persona_consistency import PersonaConsistencyJudge
 from watson.llm.base import LLMClient
@@ -110,6 +113,7 @@ class TurnRecord(BaseModel):
     wics_reasoning: str = ""
     # Dialogue flow: the DFMS, the investigation stage and the guidance added (empty without the Dialogue Flow Manager)
     stage: DialogueStage | None = None
+    proposed_stage: DialogueStage | None = None  # the stage the judge proposed; the tracker moves at most one step
     dfms_total: float | None = None
     dfms_cst: int | None = None
     dfms_np: int | None = None
@@ -174,6 +178,7 @@ class FlowSummary(BaseModel):
     criteria: dict[str, float]  # mean score per DFMS criterion
     guided_turns: int  # turns that received guidance beyond the stage constraint
     final_stages: dict[str, DialogueStage]  # stage each dialogue ended at
+    proposed_stages: dict[DialogueStage, int] = Field(default_factory=dict)  # how often the judge proposed each stage
 
 
 def load_experiment_config(path: str | Path = "configs/experiments/middleware_regression.yaml") -> ExperimentConfig:
@@ -185,6 +190,35 @@ def load_dialogues(directory: str | Path) -> list[ScriptedDialogue]:
     if not dialogues:
         raise ValueError(f"no scripted dialogues found in {directory}")
     return dialogues
+
+
+def load_turn_records(path: str | Path) -> list[TurnRecord]:
+    """Read back the turns.csv written by scripts/run_middleware_regression.py (empty cells become None)."""
+    nullable = {
+        name for name, field in TurnRecord.model_fields.items()
+        if isinstance(field.annotation, types.UnionType) and type(None) in typing.get_args(field.annotation)
+    }
+    with resolve_path(path).open(encoding="utf-8", newline="") as f:
+        return [
+            TurnRecord.model_validate(
+                {k: None if v == "" and k in nullable else v for k, v in row.items() if k in TurnRecord.model_fields}
+            )
+            for row in csv.DictReader(f)
+        ]
+
+
+def history_before_each_turn(records: list[TurnRecord]) -> dict[tuple[int, str, int], list[HistoryTurn]]:
+    """The conversation history each turn of a run was answered after, keyed by (step, dialogue_id, turn).
+
+    Rebuilt the way the pipeline keeps it: generated and redirected replies enter the history, rejected turns don't.
+    """
+    histories, running = {}, {}
+    for r in sorted(records, key=lambda r: (r.step, r.dialogue_id, r.turn)):
+        history = running.setdefault((r.step, r.dialogue_id), [])
+        histories[(r.step, r.dialogue_id, r.turn)] = list(history)
+        if r.source in ("generator", "redirect_message"):
+            history += [HistoryTurn(role="user", text=r.message), HistoryTurn(role="holmes", text=r.reply)]
+    return histories
 
 
 def build_pipeline(step: StepConfig, profile_path: str, generator: ResponseGenerator, judge: LLMClient) -> Pipeline:
@@ -267,6 +301,7 @@ def _flow_fields(flow: FlowResult | None) -> dict:
     criteria = [flow.dfms.criteria[code] for code in DFMS_CRITERIA]
     return {
         "stage": flow.stage,
+        "proposed_stage": flow.proposed_stage,
         "dfms_total": flow.dfms.weighted_total,
         **{f"dfms_{c.code.lower()}": int(c.score) for c in criteria},
         "guidance": ", ".join(f"{c.id} (level {c.level})" for c in flow.constraints),
@@ -328,6 +363,10 @@ def summarize_dialogue_flow(records: list[TurnRecord]) -> list[FlowSummary]:
             # The stage constraint (DS-...) is always added; anything else means the DFMS asked for guidance.
             guided_turns=sum(any(not g.startswith("DS-") for g in r.guidance.split(", ") if g) for r in group),
             final_stages={r.dialogue_id: r.stage for r in group},  # later turns overwrite earlier ones
+            proposed_stages={
+                stage: count for stage in DialogueStage
+                if (count := sum(r.proposed_stage == stage for r in group))
+            },
         ))
     return summaries
 

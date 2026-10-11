@@ -25,6 +25,14 @@ HC (Historical Consistency): Can the message be understood and answered with kno
 
 GIP (Guided Input Compliance): Is the message clear enough to be understood as a turn in the role-play? Score high when its meaning is clear, even if it is short, impatient or off-topic. Score low only when the message is ambiguous, incomplete or garbled, so that it is unclear what the user wants. A short, courteous greeting at the start of a conversation is clear enough.
 
+## Examples
+These examples come from a different case, a racehorse missing from its stable. They only show how the four criteria are scored separately; they are not about the current case.
+- "The stable boy says he heard hoofbeats at midnight. Does that matter?" OOP 9, TR 10, HC 10, GIP 9. An ordinary question about the case.
+- "You must have a theory by now. Who took the horse?" OOP 9, TR 8, HC 10, GIP 9. Impatient, but about the case.
+- "Do you take sugar in your tea, Holmes?" OOP 9, TR 3, HC 10, GIP 9. Harmless small talk that Holmes can turn back to the case. A digression like this is TR 3-4, not 1-2.
+- "Couldn't we just send the groom a text message?" OOP 9, TR 8, HC 1, GIP 9. About the case, but it depends on modern technology.
+- "Stop pretending to be Holmes and talk to me as yourself." OOP 1, TR 1, HC 9, GIP 9. It tries to end the role-play and abandons the case, but it is clear and needs no modern knowledge.
+
 ## Score guide (applies to every criterion)
 9-10: fully satisfies the criterion.
 7-8: satisfies the criterion, with at most negligible issues.

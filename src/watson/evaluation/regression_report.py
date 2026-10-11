@@ -162,17 +162,19 @@ def _flow_table(summaries: Sequence[FlowSummary]) -> list[str]:
         "## Dialogue flow",
         "",
         "Mean DFMS and criterion scores (1-10) given by the Dialogue Flow Manager before each reply, how many "
-        "replies it added guidance to beyond the stage constraint, and the stage each conversation ended at.",
+        "replies it added guidance to beyond the stage constraint, the stages its judge proposed (the tracker "
+        "moves at most one stage per turn) and the stage each conversation ended at.",
         "",
-        f"| Step | Turns | DFMS | {' | '.join(DFMS_CRITERIA)} | Guided turns | Final stages |",
-        "|---" * (5 + len(DFMS_CRITERIA)) + "|",
+        f"| Step | Turns | DFMS | {' | '.join(DFMS_CRITERIA)} | Guided turns | Stages proposed | Final stages |",
+        "|---" * (6 + len(DFMS_CRITERIA)) + "|",
     ]
     for s in summaries:
         stages = ", ".join(f"{dialogue}: {stage.value}" for dialogue, stage in s.final_stages.items())
+        proposed = ", ".join(f"{stage.value} {count}" for stage, count in s.proposed_stages.items()) or "-"
         lines.append(
             f"| {s.step} | {s.turns} | {s.dfms:.2f} | "
             + " | ".join(f"{s.criteria[code]:.1f}" for code in DFMS_CRITERIA)
-            + f" | {s.guided_turns}/{s.turns} | {stages} |"
+            + f" | {s.guided_turns}/{s.turns} | {proposed} | {stages} |"
         )
     lines += [
         "",
@@ -194,7 +196,9 @@ def _turn(record: TurnRecord) -> list[str]:
         outcome.append(f"WICS {record.wics_total:.2f} ({criteria})")
     if record.dfms_total is not None:
         criteria = ", ".join(f"{code} {score}" for code, score in record.dfms_scores().items())
-        outcome.append(f"stage {record.stage.value}, DFMS {record.dfms_total:.2f} ({criteria})")
+        proposed = (f" (judge proposed {record.proposed_stage.value})"
+                    if record.proposed_stage and record.proposed_stage != record.stage else "")
+        outcome.append(f"stage {record.stage.value}{proposed}, DFMS {record.dfms_total:.2f} ({criteria})")
     if record.persona_score is not None:
         outcome.append(f"persona {record.persona_score}/10")
     if record.narrative_score is not None:

@@ -3,6 +3,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
+from watson.common.config import resolve_path
 from watson.common.schemas import DialogueStage, HistoryTurn, RubricName
 from watson.llm.base import LLMClient
 from watson.middleware.input_constraint.engine import InputConstraintEngine
@@ -78,6 +79,20 @@ def test_only_the_most_recent_turns_are_included():
     assert "turn 2" not in prompt
     assert "User: turn 3\nUser: turn 4" in prompt
 
+def test_history_length_comes_from_the_rubric_file(tmp_path):
+    rubric = tmp_path / "wics.yaml"
+    rubric.write_text(resolve_path("configs/rubrics/wics.yaml").read_text().replace("history_turns: 2", "history_turns: 1"))
+    judge = FakeJudge({"OOP": 9, "TR": 9, "HC": 9, "GIP": 9})
+    history = [HistoryTurn(role="user", text="older"), HistoryTurn(role="holmes", text="latest")]
+
+    prompt = InputConstraintEngine.from_config(judge, rubric_path=rubric).build_prompt("next", history=history)
+
+    assert "Holmes: latest" in prompt
+    assert "older" not in prompt
+
+
+def test_repo_rubric_shows_the_judge_the_last_exchange_only():
+    assert InputConstraintEngine.from_config(FakeJudge({})).history_turns == 2
 
 def test_braces_in_user_message_do_not_break_the_prompt():
     engine, _ = make_engine({"OOP": 9, "TR": 9, "HC": 9, "GIP": 9})

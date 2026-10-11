@@ -8,6 +8,12 @@ weights:
   HC: 0.25   # Historical Consistency
   GIP: 0.15  # Guided Input Compliance
 
+# How many earlier turns the judge sees (a visitor message and a Holmes reply
+# are one turn each, so 2 is the last exchange). DRAFT: lowered from 6 after
+# run 3, where the same message got different decisions depending on the
+# conversation before it. The case context is always included in full.
+history_turns: 2
+
 # Decision Layer (Section 5.2.1.1). Each value is the minimum score for that
 # decision; anything below `redirect` is Reject. The final decision is the
 # stricter of the WICS band and the lowest single criterion's band.

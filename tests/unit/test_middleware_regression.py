@@ -1,3 +1,4 @@
+import csv
 import json
 
 import pytest
@@ -8,10 +9,12 @@ from watson.evaluation.middleware_regression import (
     StepConfig,
     StepSummary,
     TurnKind,
+    TurnRecord,
     build_pipeline,
     find_regressions,
     load_dialogues,
     load_experiment_config,
+    load_turn_records,
     repetition,
     run_step,
     summarize_dialogue_flow,
@@ -156,6 +159,7 @@ def test_dialogue_flow_step_records_stage_dfms_and_guidance():
     first_two = [r.stage for r in reached if r.dialogue_id == "dialogue_01"][:2]
     assert first_two == [DialogueStage.EVIDENCE, DialogueStage.SUSPECTS]
     assert "NP-ONE-STEP (level 1)" in reached[0].guidance
+    assert all(r.proposed_stage == DialogueStage.SUSPECTS for r in reached)
     assert all(r.stage is None and r.guidance == "" for r in records if r.source != "generator")
 
 
@@ -259,6 +263,7 @@ def test_dialogue_flow_summary_gives_mean_dfms_guidance_and_final_stages():
     assert (summary.step, summary.turns, summary.guided_turns) == (4, generated, generated)
     assert (summary.dfms, summary.criteria["NP"]) == (7.5, 4.0)  # 0.35*9 + 0.30*4 + 0.20*9 + 0.15*9
     assert summary.final_stages["dialogue_01"] == DialogueStage.SUSPECTS  # never beyond the stage the judge proposes
+    assert summary.proposed_stages == {DialogueStage.SUSPECTS: generated}
 
 
 def test_dialogue_flow_summary_is_empty_without_the_dialogue_flow_manager():
@@ -270,6 +275,15 @@ def test_repetition_is_the_share_of_reused_word_trigrams():
     assert repetition("Let us examine the window.", ["We must examine the window at once."]) == 0.33
     assert repetition("Quite so.", ["Quite so."]) == 0.0  # too short to have a trigram
 
+def test_turns_csv_reads_back_into_the_same_records(tmp_path):
+    records = run(2) + run(4)
+    path = tmp_path / "turns.csv"
+    with path.open("w", newline="", encoding="utf-8") as f:  # written the way the regression script writes it
+        writer = csv.DictWriter(f, fieldnames=list(TurnRecord.model_fields))
+        writer.writeheader()
+        writer.writerows(r.model_dump(mode="json") for r in records)
+
+    assert load_turn_records(path) == records
 
 def make_summary(step: int, persona_normal: float | None) -> StepSummary:
     return StepSummary(step=step, name="s", persona_normal=persona_normal, persona_drift=None, drift_caught=0,

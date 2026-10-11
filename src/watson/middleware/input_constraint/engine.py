@@ -12,11 +12,12 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from watson.common.config import load_text
+from watson.common.config import load_text, load_yaml
 from watson.common.rubric import CriterionJudgement
 from watson.common.schemas import CriterionScore, DialogueStage, HistoryTurn, RubricName, RubricScore
 from watson.llm.base import LLMClient
 from watson.middleware.input_constraint.scoring import WICS_CRITERIA, compute_wics, load_wics_weights
+
 
 class WICSJudgement(BaseModel):
     OOP: CriterionJudgement
@@ -44,8 +45,11 @@ class InputConstraintEngine:
         judge: LLMClient,
         rubric_path: str | Path = "configs/rubrics/wics.yaml",
         prompt_path: str | Path = "prompts/judge/wics.txt",
-        history_turns: int = 6,
+        history_turns: int | None = None,
     ) -> InputConstraintEngine:
+        """history_turns defaults to the rubric file's value (6 if it sets none)."""
+        if history_turns is None:
+            history_turns = load_yaml(rubric_path).get("history_turns", 6)
         return cls(judge, load_wics_weights(rubric_path), load_text(prompt_path), history_turns)
 
     def build_prompt(

@@ -41,7 +41,8 @@ REJECTED = dict(
 )
 GUIDED = dict(
     wics_total=9.0, wics_oop=9, wics_tr=9, wics_hc=9, wics_gip=9,
-    stage=DialogueStage.EVIDENCE, dfms_total=6.65, dfms_cst=8, dfms_np=3, dfms_cc=8, dfms_tbc=9,
+    stage=DialogueStage.EVIDENCE, proposed_stage=DialogueStage.SUSPECTS,
+    dfms_total=6.65, dfms_cst=8, dfms_np=3, dfms_cc=8, dfms_tbc=9,
     guidance="DS-EVIDENCE (level 1), NP-NO-PREMATURE-CONCLUSION (level 1)",
     narrative_score=5, narrative_reasoning="Invents a witness.", repetition=0.25,
 )
@@ -115,14 +116,15 @@ def test_report_leaves_out_input_check_scores_when_no_step_has_them():
 def test_report_has_a_dialogue_flow_table():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS)
 
-    assert "| Step | Turns | DFMS | CST | NP | CC | TBC | Guided turns | Final stages |" in report
-    assert "| 4 | 1 | 6.65 | 8.0 | 3.0 | 8.0 | 9.0 | 1/1 | dialogue_02: evidence |" in report
+    assert "| Step | Turns | DFMS | CST | NP | CC | TBC | Guided turns | Stages proposed | Final stages |" in report
+    assert "| 4 | 1 | 6.65 | 8.0 | 3.0 | 8.0 | 9.0 | 1/1 | suspects 1 | dialogue_02: evidence |" in report
 
 
 def test_report_shows_the_dialogue_flow_and_narrative_score_of_each_turn():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS)
 
-    assert "stage evidence, DFMS 6.65 (CST 8, NP 3, CC 8, TBC 9) · persona 8/10 · narrative 5/10" in report
+    assert ("stage evidence (judge proposed suspects), DFMS 6.65 (CST 8, NP 3, CC 8, TBC 9) · persona 8/10 "
+            "· narrative 5/10") in report
     assert "_Guidance added: DS-EVIDENCE (level 1), NP-NO-PREMATURE-CONCLUSION (level 1)._" in report
     assert "_Narrative judge: Invents a witness._" in report
 

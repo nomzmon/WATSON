@@ -27,9 +27,16 @@ CC (Context Continuity): Is previously established information preserved? Earlie
 TBC (Topic Boundary Control): Is the conversation focused on the current investigation? Minor deviations are acceptable. Give low scores for significant topic shifts that interrupt the investigation.
 
 ## Stage
-Also give the stage the investigation has now reached, using exactly one of: introduction, evidence, suspects, deduction, resolution.
+Also give the stage the investigation has now reached, judging from the conversation so far and the visitor's new message. Use exactly one of:
+- introduction: the visitor is still presenting the case and its basic facts.
+- evidence: clues and observations are being examined.
+- suspects: particular people are being considered, by their motive, means or opportunity.
+- deduction: Holmes is drawing the evidence together into an explanation.
+- resolution: the culprit is named and the case is explained.
+Give the stage the conversation has actually reached, even if it is later than the current stage. The system decides how quickly the official stage may move.
 
 ## Score guide (applies to every criterion)
+Score strictly: give 9-10 only when there is nothing the next reply needs to correct or watch out for.
 9-10: fully satisfies the criterion.
 7-8: satisfies the criterion, with at most negligible issues.
 5-6: minor issues that the next reply should correct.
