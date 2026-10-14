@@ -1,0 +1,27 @@
+# Output Validation Score (OVS)
+# Thesis Section 5.2.3, Equation 5.3 and Table 5.4. The judge scores each
+# criterion of the candidate reply as a whole number from 1 to 10.
+
+weights:
+  PCC: 0.40  # Persona Consistency
+  NC: 0.30   # Narrative Coherence
+  HWB: 0.20  # Historical and World Boundary
+  SS: 0.10   # Style and Syntax
+
+# DRAFT values for group review: the thesis does not give the pass threshold,
+# the retry limit or the fallback reply.
+validation:
+  # A reply passes when its OVS reaches `pass_threshold` and no criterion is
+  # below `min_criterion` (the same "stricter of the two" idea as the WICS).
+  pass_threshold: 7.0
+  min_criterion: 5
+  # Regenerations allowed after the first reply fails (so at most 3 replies).
+  max_retries: 2
+  # Criteria below this get their constraints strengthened before a retry; if
+  # none is, the lowest criterion is used.
+  weak_criterion_below: 7
+
+# Returned, in Holmes' voice, when every attempt fails validation.
+fallback_message: >-
+  Forgive me, my thoughts have run ahead of the facts. Let us return to what we
+  know for certain. Tell me again, as precisely as you can, what you observed.

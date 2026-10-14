@@ -9,6 +9,7 @@ from watson.middleware.decision.messages import DecisionMessages
 from watson.middleware.dialogue_flow.manager import DialogueFlowManager
 from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.input_constraint.engine import InputConstraintEngine
+from watson.middleware.output_validation.retry import OutputValidationEngine
 from watson.middleware.prompt_builder.builder import PromptBuilder
 from watson.pipeline.orchestrator import Pipeline
 from watson.pipeline.session import ConversationSession
@@ -171,3 +172,65 @@ def test_dialogue_flow_needs_a_template_with_a_guidance_section():
 
     with pytest.raises(ValueError, match="constraints"):
         Pipeline(builder, ResponseGenerator(FakeGemma()), dialogue_flow=DialogueFlowManager.from_config(FlowJudge()))
+        
+class OVSJudge(LLMClient):
+    """Answers the Output Validation judge with the given OVS scores for every reply."""
+
+    model_name = "fake-ovs-judge"
+
+    def __init__(self, score: int) -> None:
+        self.score = score
+        self.calls = 0
+
+    def _generate(self, prompt: str, **kwargs) -> str:
+        self.calls += 1
+        return json.dumps({c: {"reasoning": "r", "score": self.score} for c in ("PCC", "NC", "HWB", "SS")})
+
+
+def make_validated_pipeline(gemma: FakeGemma, ovs_score: int, with_flow: bool = False) -> Pipeline:
+    builder = PromptBuilder.from_config(profile_path=PROFILE, template_path="prompts/generation/structured_prompt.txt")
+    flow = {"dialogue_flow": DialogueFlowManager.from_config(FlowJudge())} if with_flow else {}
+    return Pipeline(builder, ResponseGenerator(gemma),
+                    output_validation=OutputValidationEngine.from_config(OVSJudge(ovs_score), PROFILE), **flow)
+
+
+def test_a_reply_that_passes_validation_is_delivered():
+    gemma = FakeGemma()
+    session = ConversationSession()
+
+    result = make_validated_pipeline(gemma, ovs_score=9).run_turn(session, "What of the footprints?", seed=7)
+
+    assert (result.source, result.reply) == ("generator", "Elementary.")
+    assert len(result.validation.attempts) == 1
+    assert [latency.component for latency in result.latencies] == ["generation", "output_validation"]
+
+
+def test_failed_replies_are_retried_with_new_seeds_then_replaced_by_the_fallback():
+    gemma = FakeGemma()
+    session = ConversationSession()
+
+    result = make_validated_pipeline(gemma, ovs_score=3).run_turn(session, "What of the footprints?", seed=7)
+
+    assert result.source == "fallback_message"
+    assert result.reply.startswith("Forgive me")
+    assert [call["seed"] for call in gemma.calls] == [7, 1007, 2007]
+    assert "- Every sentence must sound like Holmes" in gemma.calls[2]["prompt"]  # persona at level 3 by then
+    assert session.history[-1].text == result.reply  # the fallback is in Holmes' voice, so it stays in the history
+
+
+def test_validation_keeps_the_dialogue_flow_guidance_without_repeating_it():
+    gemma = FakeGemma()
+
+    make_validated_pipeline(gemma, ovs_score=9, with_flow=True).run_turn(ConversationSession(), "Who stole it?")
+
+    prompt = gemma.calls[0]["prompt"]
+    assert prompt.count("- Do not announce a final conclusion before the evidence supports it.") == 1
+    assert "Current stage of the investigation: evidence" in prompt
+
+
+def test_output_validation_needs_a_template_with_a_guidance_section():
+    builder = PromptBuilder.from_config(profile_path=PROFILE, template_path="prompts/generation/baseline_persona.txt")
+
+    with pytest.raises(ValueError, match="constraints"):
+        Pipeline(builder, ResponseGenerator(FakeGemma()),
+                 output_validation=OutputValidationEngine.from_config(OVSJudge(9), PROFILE))

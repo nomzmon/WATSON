@@ -1,8 +1,9 @@
 """Runs one conversational turn through the enabled middleware components.
 
 Components are added here one at a time as they are built and validated:
-currently the Input Constraint Engine with the Decision Layer, the Prompt
-Builder, the Dialogue Flow Manager and the Response Generation Layer.
+the Input Constraint Engine with the Decision Layer, the Prompt Builder, the
+Dialogue Flow Manager, the Response Generation Layer and the Output Validation
+Engine.
 """
 
 from __future__ import annotations
@@ -18,10 +19,11 @@ from watson.middleware.decision.messages import DecisionMessages
 from watson.middleware.dialogue_flow.manager import DialogueFlowManager, FlowResult
 from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.input_constraint.engine import InputConstraintEngine
-from watson.middleware.prompt_builder.builder import PromptBuilder
+from watson.middleware.output_validation.retry import OutputValidationEngine, ValidationResult
+from watson.middleware.prompt_builder.builder import PromptBuilder, StructuredPrompt
 from watson.pipeline.session import ConversationSession
 
-ReplySource = Literal["generator", "redirect_message", "reject_message"]
+ReplySource = Literal["generator", "redirect_message", "reject_message", "fallback_message"]
 
 
 class TurnResult(BaseModel):
@@ -31,6 +33,7 @@ class TurnResult(BaseModel):
     wics: RubricScore | None = None
     decision: DecisionResult | None = None
     flow: FlowResult | None = None
+    validation: ValidationResult | None = None
     latencies: list[ComponentLatency]
 
 
@@ -43,22 +46,25 @@ class Pipeline:
         decision_thresholds: DecisionThresholds | None = None,
         decision_messages: DecisionMessages | None = None,
         dialogue_flow: DialogueFlowManager | None = None,
+        output_validation: OutputValidationEngine | None = None,
     ) -> None:
         if input_constraint and not (decision_thresholds and decision_messages):
             raise ValueError("the Input Constraint Engine needs the Decision Layer's thresholds and messages")
-        if dialogue_flow and "{constraints}" not in builder.template:
-            raise ValueError("the Dialogue Flow Manager needs a prompt template with a {constraints} section")
+        if (dialogue_flow or output_validation) and "{constraints}" not in builder.template:
+            raise ValueError("the Dialogue Flow Manager and Output Validation Engine need a prompt template "
+                             "with a {constraints} section")
         self.builder = builder
         self.generator = generator
         self.input_constraint = input_constraint
         self.decision_thresholds = decision_thresholds
         self.decision_messages = decision_messages
         self.dialogue_flow = dialogue_flow
+        self.output_validation = output_validation
 
     def run_turn(self, session: ConversationSession, user_message: str, **generation_options: Any) -> TurnResult:
         """Extra keyword arguments go to the generator, e.g. seed=42."""
         latencies = []
-        wics = decision = flow = None
+        wics = decision = flow = validation = None
 
         if self.input_constraint:
             with timer() as elapsed:
@@ -81,14 +87,40 @@ class Pipeline:
             # Rephrase passes the original message through until rephrasing is designed.
 
         prompt = self.builder.build(user_message, session.history, session.dialogue_stage, session.case_context)
+        guided, selected = prompt, []
         if self.dialogue_flow:
             with timer() as elapsed:
-                prompt, flow = self.dialogue_flow.apply(prompt)
+                guided, flow = self.dialogue_flow.apply(prompt)
             latencies.append(ComponentLatency(component="dialogue_flow", ms=elapsed()))
             session.dialogue_stage = flow.stage
+            selected = flow.constraints
+
+        if not self.output_validation:
+            with timer() as elapsed:
+                reply = self.generator.generate(self.builder.render(guided), **generation_options).text
+            latencies.append(ComponentLatency(component="generation", ms=elapsed()))
+            session.add_exchange(user_message, reply)
+            return TurnResult(user_message=user_message, reply=reply, source="generator",
+                              wics=wics, decision=decision, flow=flow, latencies=latencies)
+
+        generation_ms = 0.0
+
+        def generate(candidate: StructuredPrompt, attempt: int) -> str:
+            nonlocal generation_ms
+            options = dict(generation_options)
+            if "seed" in options:
+                options["seed"] += 1000 * attempt  # a retry with the same seed could repeat the rejected reply
+            with timer() as elapsed:
+                text = self.generator.generate(self.builder.render(candidate), **options).text
+            generation_ms += elapsed()
+            return text
+
         with timer() as elapsed:
-            response = self.generator.generate(self.builder.render(prompt), **generation_options)
-        latencies.append(ComponentLatency(component="generation", ms=elapsed()))
-        session.add_exchange(user_message, response.text)
-        return TurnResult(user_message=user_message, reply=response.text, source="generator",
-                          wics=wics, decision=decision, flow=flow, latencies=latencies)
+            validation = self.output_validation.run(guided.model_copy(update={"constraints": prompt.constraints}),
+                                                    selected, generate)
+        latencies += [ComponentLatency(component="generation", ms=generation_ms),
+                      ComponentLatency(component="output_validation", ms=elapsed() - generation_ms)]
+        session.add_exchange(user_message, validation.reply)  # the fallback is in Holmes' voice, so it stays
+        return TurnResult(user_message=user_message, reply=validation.reply,
+                          source="fallback_message" if validation.used_fallback else "generator",
+                          wics=wics, decision=decision, flow=flow, validation=validation, latencies=latencies)
