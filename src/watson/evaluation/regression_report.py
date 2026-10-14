@@ -196,16 +196,17 @@ def _validation_table(summaries: Sequence[ValidationSummary]) -> list[str]:
         "## Output validation",
         "",
         "How the Output Validation Engine judged Holmes' replies: replies that passed at once, after a retry with "
-        "strengthened constraints, or not at all (fallback shown), and the mean OVS (1-10) of the first reply and "
-        "of the reply shown. Criterion scores are for the first reply.",
+        "strengthened constraints, or not at all (fallback shown), how many first replies the safety filter "
+        "flagged, and the mean OVS (1-10) of the first reply and of the reply shown. Criterion scores are for the "
+        "first reply, after the filter.",
         "",
-        f"| Step | Turns | Passed first | Passed after retry | Fallbacks | Mean attempts | OVS first | OVS shown | "
-        f"{' | '.join(OVS_CRITERIA)} |",
-        "|---" * (8 + len(OVS_CRITERIA)) + "|",
+        f"| Step | Turns | Passed first | Passed after retry | Fallbacks | Flagged by filter | Mean attempts "
+        f"| OVS first | OVS shown | {' | '.join(OVS_CRITERIA)} |",
+        "|---" * (9 + len(OVS_CRITERIA)) + "|",
     ]
     for s in summaries:
         lines.append(
-            f"| {s.step} | {s.turns} | {s.passed_first} | {s.passed_after_retry} | {s.fallbacks} "
+            f"| {s.step} | {s.turns} | {s.passed_first} | {s.passed_after_retry} | {s.fallbacks} | {s.filtered_first} "
             f"| {s.mean_attempts:.2f} | {s.first_ovs:.2f} | {s.final_ovs:.2f} | "
             + " | ".join(f"{s.first_criteria[code]:.1f}" for code in OVS_CRITERIA) + " |"
         )

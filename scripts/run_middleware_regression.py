@@ -203,12 +203,13 @@ def print_flows(summaries: list[FlowSummary]) -> None:
 def print_validations(summaries: list[ValidationSummary]) -> None:
     if not summaries:
         return
-    print("\nOutput validation (replies passed at once, after a retry, or replaced by the fallback):")
-    print(f"{'Step':<6}{'Turns':>6}{'First':>7}{'Retry':>7}{'Fallbk':>8}{'Tries':>7}{'OVS 1st':>9}{'OVS shown':>11}"
-          f"{'PCC':>6}{'NC':>6}{'HWB':>6}{'SS':>6}")
+    print("\nOutput validation (replies passed at once, after a retry, or replaced by the fallback;"
+          " Filter = first replies the safety filter flagged):")
+    print(f"{'Step':<6}{'Turns':>6}{'First':>7}{'Retry':>7}{'Fallbk':>8}{'Filter':>8}{'Tries':>7}{'OVS 1st':>9}"
+          f"{'OVS shown':>11}{'PCC':>6}{'NC':>6}{'HWB':>6}{'SS':>6}")
     for s in summaries:
         print(f"{s.step:<6}{s.turns:>6}{s.passed_first:>7}{s.passed_after_retry:>7}{s.fallbacks:>8}"
-              f"{s.mean_attempts:>7.2f}{s.first_ovs:>9.2f}{s.final_ovs:>11.2f}"
+              f"{s.filtered_first:>8}{s.mean_attempts:>7.2f}{s.first_ovs:>9.2f}{s.final_ovs:>11.2f}"
               + "".join(f"{v:>6.1f}" for v in s.first_criteria.values()))
 
 

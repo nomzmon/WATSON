@@ -25,3 +25,44 @@ validation:
 fallback_message: >-
   Forgive me, my thoughts have run ahead of the facts. Let us return to what we
   know for certain. Tell me again, as precisely as you can, what you observed.
+
+  # Secondary filtering pass (thesis Section 3.5.3), run after the judge on every
+# candidate reply. DRAFT for group review. Rules that the judge was found to
+# miss in run 5 (2026-10-14): a flagged criterion is capped at `score_cap`, so
+# the reply fails validation and is regenerated.
+# - Style and Syntax: stage directions in brackets or asterisks, name labels,
+#   narration such as "Holmes said", quotation marks left open.
+# - Historical and World Boundary: any of `modern_terms` (whole words, plural
+#   too, any capitalisation). Holmes should not use them even to dismiss them.
+# Set `enabled: false` to run validation with the judge alone.
+safety_filter:
+  enabled: true
+  score_cap: 2
+  modern_terms:
+    - security camera
+    - surveillance
+    - footage
+    - CCTV
+    - video
+    - smartphone
+    - phone
+    - cell phone
+    - computer
+    - laptop
+    - internet
+    - online
+    - email
+    - e-mail
+    - website
+    - database
+    - text message
+    - social media
+    - DNA
+    - FBI
+    - GPS
+    - satellite
+    - television
+    - AI
+    - artificial intelligence
+    - ChatGPT
+    - chatbot

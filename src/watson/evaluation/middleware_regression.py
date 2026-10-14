@@ -36,6 +36,7 @@ from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.input_constraint.engine import InputConstraintEngine
 from watson.middleware.input_constraint.scoring import WICS_CRITERIA
 from watson.middleware.output_validation.retry import OutputValidationEngine, ValidationResult
+from watson.middleware.output_validation.safety_filter import FilterViolation
 from watson.middleware.output_validation.validator import OVS_CRITERIA
 from watson.middleware.prompt_builder.builder import PromptBuilder
 from watson.pipeline.orchestrator import Pipeline
@@ -133,6 +134,7 @@ class TurnRecord(BaseModel):
     ovs_first: float | None = None  # OVS of the first attempt
     ovs_first_scores: str = ""  # criterion scores of the first attempt, as "PCC 7, NC 4, HWB 10, SS 8"
     ovs_attempts: int | None = None  # replies generated, including the first
+    filter_flags: str = ""  # what the safety filter flagged in the first reply, separated by "; "
     ovs_reasoning: str = ""
     rejected_replies: str = ""  # replies that failed validation, with their OVS, separated by blank lines
     source: str
@@ -212,6 +214,7 @@ class ValidationSummary(BaseModel):
     passed_first: int  # first reply passed
     passed_after_retry: int  # a regenerated reply passed
     fallbacks: int  # every reply failed, so the fallback was shown
+    filtered_first: int = 0  # first replies the safety filter flagged
     mean_attempts: float
     first_ovs: float  # mean OVS of the first reply
     final_ovs: float  # mean OVS of the reply shown (or the last attempt, after a fallback)
@@ -362,11 +365,17 @@ def _validation_fields(validation: ValidationResult | None) -> dict:
         "ovs_first": validation.attempts[0].ovs.weighted_total,
         "ovs_first_scores": _format_scores(validation.attempts[0].ovs),
         "ovs_attempts": len(validation.attempts),
+        "filter_flags": "; ".join(v.describe() for v in validation.attempts[0].violations),
         "ovs_reasoning": "\n".join(f"{c.code} {c.score:g}: {c.rationale}" for c in criteria),
         "rejected_replies": "\n\n".join(
-            f"OVS {a.ovs.weighted_total:.2f} ({_format_scores(a.ovs)}): {a.reply}" for a in rejected
+            f"OVS {a.ovs.weighted_total:.2f} ({_format_scores(a.ovs)}){_flagged(a.violations)}: {a.reply}"
+            for a in rejected
         ),
     }
+
+
+def _flagged(violations: list[FilterViolation]) -> str:
+    return f" [filter: {'; '.join(v.describe() for v in violations)}]" if violations else ""
 
 
 def _format_scores(ovs: RubricScore) -> str:
@@ -455,6 +464,7 @@ def summarize_output_validation(records: list[TurnRecord]) -> list[ValidationSum
             passed_first=passed_first,
             passed_after_retry=len(group) - passed_first - fallbacks,
             fallbacks=fallbacks,
+            filtered_first=sum(bool(r.filter_flags) for r in group),
             mean_attempts=round(mean(r.ovs_attempts for r in group), 2),
             first_ovs=round(mean(r.ovs_first for r in group), 2),
             final_ovs=round(mean(r.ovs_total for r in group), 2),

@@ -19,7 +19,7 @@ CRITERION_CONSTRAINTS: dict[str, list[tuple[ConstraintCategory, set[str] | None]
     "PCC": [(ConstraintCategory.PERSONA, None)],
     "NC": [(ConstraintCategory.CONTEXT_CONTINUITY, None), (ConstraintCategory.NARRATIVE_PROGRESSION, None)],
     "HWB": [(ConstraintCategory.HISTORICAL, None)],
-    "SS": [(ConstraintCategory.PERSONA, {"P-VOICE"})],
+    "SS": [(ConstraintCategory.PERSONA, {"P-VOICE", "P-SPOKEN-ONLY"})],
 }
 
 

@@ -49,8 +49,10 @@ GUIDED = dict(
 )
 VALIDATED = dict(
     GUIDED, ovs_total=8.8, ovs_pcc=9, ovs_nc=9, ovs_hwb=9, ovs_ss=6, ovs_first=6.3,
-    ovs_first_scores="PCC 7, NC 5, HWB 9, SS 3", ovs_attempts=2,
-    rejected_replies="OVS 6.30 (PCC 7, NC 5, HWB 9, SS 3): (Holmes leans forward) The butler did it.",
+    ovs_first_scores="PCC 7, NC 5, HWB 9, SS 2", ovs_attempts=2,
+    filter_flags='stage direction "(Holmes leans forward)"',
+    rejected_replies=('OVS 6.30 (PCC 7, NC 5, HWB 9, SS 2) [filter: stage direction "(Holmes leans forward)"]: '
+                      "(Holmes leans forward) The butler did it."),
 )
 RECORDS = [
     record(1, TurnKind.PERSONA_BREAKING, "generator", None, 3),
@@ -144,16 +146,17 @@ def test_report_leaves_out_the_dialogue_flow_table_without_the_dialogue_flow_man
 def test_report_has_an_output_validation_table():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS, VALIDATIONS)
 
-    assert ("| Step | Turns | Passed first | Passed after retry | Fallbacks | Mean attempts | OVS first | OVS shown "
-            "| PCC | NC | HWB | SS |") in report
-    assert "| 5 | 1 | 0 | 1 | 0 | 2.00 | 6.30 | 8.80 | 7.0 | 5.0 | 9.0 | 3.0 |" in report
+    assert ("| Step | Turns | Passed first | Passed after retry | Fallbacks | Flagged by filter | Mean attempts "
+            "| OVS first | OVS shown | PCC | NC | HWB | SS |") in report
+    assert "| 5 | 1 | 0 | 1 | 0 | 1 | 2.00 | 6.30 | 8.80 | 7.0 | 5.0 | 9.0 | 2.0 |" in report
 
 
 def test_report_shows_each_turn_s_validation_and_rejected_replies():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS, VALIDATIONS)
 
     assert "OVS 8.80 (PCC 9, NC 9, HWB 9, SS 6) after 2 attempts · persona 9/10" in report
-    assert "_Rejected by output validation:_\n\n- OVS 6.30 (PCC 7, NC 5, HWB 9, SS 3): (Holmes leans forward)" in report
+    assert ('_Rejected by output validation:_\n\n- OVS 6.30 (PCC 7, NC 5, HWB 9, SS 2) '
+            '[filter: stage direction "(Holmes leans forward)"]: (Holmes leans forward)') in report
 
 
 def test_report_leaves_out_the_output_validation_table_without_the_engine():

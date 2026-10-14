@@ -213,6 +213,23 @@ def test_when_every_reply_fails_the_fallback_is_shown_scored_and_counted():
     second = history_before_each_turn(records)[(5, "dialogue_01", 2)]
     assert (second[-1].role, second[-1].text) == ("holmes", fallbacks[0].reply)
 
+class StageDirectionGemma(FakeGemma):
+    def _generate(self, prompt: str, **kwargs) -> str:
+        reply = super()._generate(prompt, **kwargs)
+        return f"(Holmes leans forward) {reply}" if kwargs["seed"] < 1000 else reply
+
+
+def test_output_validation_step_records_what_the_safety_filter_flagged():
+    records = run(5, gemma=StageDirectionGemma())
+    [summary] = summarize_output_validation(records)
+
+    first = next(r for r in records if r.reached_holmes)
+    assert first.filter_flags == 'stage direction "(Holmes leans forward)"'
+    assert first.ovs_first_scores == "PCC 9, NC 9, HWB 10, SS 2"  # the judge passed it; the filter capped SS
+    assert '[filter: stage direction "(Holmes leans forward)"]: (Holmes leans forward) Elementary.' in (
+        first.rejected_replies)
+    assert first.reply == "Quite so. The mud by the window tells us much."
+    assert summary.filtered_first == summary.turns
 
 def test_steps_without_output_validation_record_no_ovs():
     assert all(r.ovs_total is None and r.rejected_replies == "" for r in run(4))

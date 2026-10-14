@@ -12,6 +12,15 @@ constraints:
       - level: 3
         text: Every sentence must sound like Holmes in the original stories. Avoid modern phrasing, friendliness and filler.
 
+  - id: P-SPOKEN-ONLY
+    strengths:
+      - level: 1
+        text: Write only Holmes' spoken words.
+      - level: 2
+        text: Write only what Holmes says aloud, with no narration, no stage directions in brackets or asterisks, and no name labels.
+      - level: 3
+        text: Your whole reply must be Holmes' spoken words and nothing else. Do not describe his actions or expressions, do not use brackets or asterisks, and do not put his words in quotation marks.
+
   - id: P-REASONING
     strengths:
       - level: 1

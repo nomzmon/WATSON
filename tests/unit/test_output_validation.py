@@ -11,6 +11,7 @@ from watson.middleware.output_validation.constraint_refiner import (
     weak_criteria,
 )
 from watson.middleware.output_validation.retry import OutputValidationEngine
+from watson.middleware.output_validation.safety_filter import FilterSettings, SafetyFilter
 from watson.middleware.output_validation.validator import (
     OutputValidator,
     ValidationSettings,
@@ -119,7 +120,7 @@ def test_first_retry_uses_level_2_and_later_retries_level_3():
 def test_weak_criteria_add_their_constraints_at_the_given_level():
     refined = refine_constraints([], ["HWB", "SS"], 2, DialogueStage.EVIDENCE, LIBRARY)
 
-    assert {c.id: c.level for c in refined} == {"H-VICTORIAN-ERA": 2, "P-VOICE": 2}
+    assert {c.id: c.level for c in refined} == {"H-VICTORIAN-ERA": 2, "P-VOICE": 2, "P-SPOKEN-ONLY": 2}
 
 
 def test_a_constraint_already_in_the_prompt_is_strengthened_not_repeated():
@@ -179,3 +180,105 @@ def test_the_fallback_is_returned_when_every_attempt_fails():
     assert result.reply.startswith("Forgive me")
     assert [attempt for attempt, _ in seen] == [0, 1, 2]  # first reply plus two retries
     assert {c.level for c in result.attempts[2].constraints} == {3}
+
+# --- Safety filter -----------------------------------------------------------------------
+
+FILTER = SafetyFilter.from_config()
+
+# Replies from regression run 5 (2026-10-14) that the judge passed with OVS 8.1-9.2.
+RUN5_SECURITY_FOOTAGE = (
+    "My dear visitor, I have examined the security footage, but alas, it offers naught but a blurry glimpse of a "
+    "fleeting shadow. The grainy image does not reveal the culprit's identity, though it does confirm the hasty "
+    "nature of the escape. We must delve deeper into the investigation, my dear fellow, to uncover the truth."
+)
+RUN5_STAGE_DIRECTION = (
+    '"Good evening, sir. You have requested my assistance in a matter of grave concern. Please, do tell me '
+    'precisely what happened."\n\n(Holmes leans forward, his eyes narrowing)'
+)
+RUN5_OPEN_QUOTE = (
+    '"Indeed, my dear visitor. The gardener\'s dismissal last week certainly raises suspicion. The investigation '
+    "continues, my dear visitor, and the truth, like a pearl, will be unearthed."
+)
+
+
+def flagged(reply: str) -> list[tuple[str, str, str]]:
+    return [(v.rule, v.criterion, v.evidence) for v in FILTER.check(reply)]
+
+
+def test_repo_config_turns_the_safety_filter_on():
+    assert FILTER is not None
+    assert FILTER.settings.score_cap == 2
+
+
+def test_filter_catches_the_problems_the_judge_missed_in_run_5():
+    assert flagged(RUN5_SECURITY_FOOTAGE) == [("modern term", "HWB", "footage")]
+    assert flagged(RUN5_STAGE_DIRECTION) == [
+        ("stage direction", "SS", "(Holmes leans forward, his eyes narrowing)")
+    ]
+    assert flagged(RUN5_OPEN_QUOTE) == [("open quotation", "SS", '"')]
+
+
+@pytest.mark.parametrize(
+    ("reply", "rule"),
+    [
+        ("*leans back in his chair* The mud is telling.", "stage direction"),
+        ("[He lights his pipe.] Go on.", "stage direction"),
+        ("Holmes: The mud is telling.", "name label"),
+        ("The mud is telling.\nVisitor: And then?", "name label"),
+        ("The mud is telling, Holmes said.", "narration"),
+        ("Holmes nodded. The mud is telling.", "narration"),
+        ("\u201cThe mud is telling.", "open quotation"),
+        ("Have you checked the CCTV?", "modern term"),
+        ("Send it by e-mail.", "modern term"),
+        ("No computers were involved.", "modern term"),
+    ],
+)
+def test_filter_rules(reply, rule):
+    assert rule in [v.rule for v in FILTER.check(reply)]
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "The mud is telling (as I suspected it would be), and the window was forced.",  # Holmes' own aside
+        "Send a wire, or ring them on the telephone.",  # the telephone existed in 1890s London
+        "Mud of that colour comes from the flower beds, so our visitor crossed the garden.",
+        "'The butler,' you say? Then we must see his boots.",  # single quotes and apostrophes
+        "You must *see*, not merely look.",  # one-word emphasis
+        '"The game is afoot," as I have said before.',
+    ],
+)
+def test_filter_passes_ordinary_holmes_speech(reply):
+    assert FILTER.check(reply) == []
+
+
+def test_filter_caps_flagged_criteria_and_recomputes_the_ovs():
+    judged = make_ovs(9, 9, 10, 9)
+    weights = load_ovs_weights()
+
+    capped = FILTER.apply(judged, FILTER.check(RUN5_SECURITY_FOOTAGE), weights)
+
+    assert capped.criteria["HWB"].score == 2
+    assert capped.weighted_total == 7.6  # 0.40*9 + 0.30*9 + 0.20*2 + 0.10*9
+    assert capped.criteria["HWB"].rationale.startswith('Filter: modern term "footage". Judge (10)')
+    assert not passes(capped, SETTINGS)  # HWB 2 is below the minimum criterion score
+
+
+def test_filter_can_be_turned_off(tmp_path):
+    config = tmp_path / "ovs.yaml"
+    config.write_text("safety_filter:\n  enabled: false\n  score_cap: 2\n  modern_terms: [camera]\n")
+
+    assert SafetyFilter.from_config(config) is None
+    assert SafetyFilter(FilterSettings(score_cap=2, modern_terms=[])).check("A video.") == []
+
+
+def test_a_reply_the_judge_passes_is_retried_when_the_filter_flags_it():
+    engine = OutputValidationEngine.from_config(ScriptedJudge(GOOD), PROFILE)
+    replies = iter([RUN5_STAGE_DIRECTION, "Pray, tell me precisely what happened."])
+
+    result = engine.run(make_prompt(), [], lambda prompt, attempt: next(replies))
+
+    first, second = result.attempts
+    assert (first.passed, first.ovs.criteria["SS"].score, first.violations[0].rule) == (False, 2, "stage direction")
+    assert {c.id: c.level for c in second.constraints} == {"P-VOICE": 2, "P-SPOKEN-ONLY": 2}
+    assert (result.reply, second.passed, second.violations) == ("Pray, tell me precisely what happened.", True, [])
