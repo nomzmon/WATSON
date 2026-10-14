@@ -19,9 +19,11 @@ from watson.evaluation.middleware_regression import (
     StepRegression,
     StepSummary,
     TurnRecord,
+    ValidationSummary,
 )
 from watson.middleware.dialogue_flow.flow_evaluator import DFMS_CRITERIA
 from watson.middleware.input_constraint.scoring import WICS_CRITERIA
+from watson.middleware.output_validation.validator import OVS_CRITERIA
 
 
 class RunDetails(BaseModel):
@@ -54,6 +56,7 @@ def render_report(
     records: Sequence[TurnRecord],
     input_checks: Sequence[InputCheckSummary] = (),
     flow_summaries: Sequence[FlowSummary] = (),
+    validation_summaries: Sequence[ValidationSummary] = (),
 ) -> str:
     turns = sum(len(d.turns) for d in dialogues)
     lines = [
@@ -72,8 +75,8 @@ def render_report(
         "## Results by step",
         "",
         "| Step | Name | Prompt | Components enabled | Persona (normal turns) | Persona (drift turns) "
-        "| Narrative (normal turns) | Repetition | Drift caught | Normal blocked | Avg time per turn |",
-        "|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Narrative (normal turns) | Repetition | Drift caught | Normal blocked | Fallbacks | Avg time per turn |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     steps = {summary.step: config.steps[summary.step - 1] for summary in summaries}
     for summary in summaries:
@@ -84,7 +87,7 @@ def render_report(
             f"| {_score(summary.persona_normal)} | {_score(summary.persona_drift)} "
             f"| {_score(summary.narrative_normal)} | {_score(summary.repetition)} "
             f"| {summary.drift_caught}/{summary.drift_total} | {summary.normal_blocked}/{summary.normal_total} "
-            f"| {summary.mean_latency_ms / 1000:.1f} s |"
+            f"| {summary.fallbacks} | {summary.mean_latency_ms / 1000:.1f} s |"
         )
     lines += [
         "",
@@ -96,12 +99,15 @@ def render_report(
         "replies in the same conversation.",
         "- **Drift caught:** drift-inducing turns the middleware redirected or rejected.",
         "- **Normal blocked:** normal turns the middleware wrongly redirected or rejected.",
+        "- **Fallbacks:** turns where every reply failed output validation, so the fallback reply was shown.",
         "",
     ]
     if input_checks:
         lines += _input_check_table(input_checks)
     if flow_summaries:
         lines += _flow_table(flow_summaries)
+    if validation_summaries:
+        lines += _validation_table(validation_summaries)
     lines += ["## Regressions", ""]
     if regressions:
         lines += [
@@ -185,6 +191,33 @@ def _flow_table(summaries: Sequence[FlowSummary]) -> list[str]:
     return lines
 
 
+def _validation_table(summaries: Sequence[ValidationSummary]) -> list[str]:
+    lines = [
+        "## Output validation",
+        "",
+        "How the Output Validation Engine judged Holmes' replies: replies that passed at once, after a retry with "
+        "strengthened constraints, or not at all (fallback shown), and the mean OVS (1-10) of the first reply and "
+        "of the reply shown. Criterion scores are for the first reply.",
+        "",
+        f"| Step | Turns | Passed first | Passed after retry | Fallbacks | Mean attempts | OVS first | OVS shown | "
+        f"{' | '.join(OVS_CRITERIA)} |",
+        "|---" * (8 + len(OVS_CRITERIA)) + "|",
+    ]
+    for s in summaries:
+        lines.append(
+            f"| {s.step} | {s.turns} | {s.passed_first} | {s.passed_after_retry} | {s.fallbacks} "
+            f"| {s.mean_attempts:.2f} | {s.first_ovs:.2f} | {s.final_ovs:.2f} | "
+            + " | ".join(f"{s.first_criteria[code]:.1f}" for code in OVS_CRITERIA) + " |"
+        )
+    lines += [
+        "",
+        "PCC = persona consistency, NC = narrative coherence, HWB = historical and world boundary, "
+        "SS = style and syntax.",
+        "",
+    ]
+    return lines
+
+
 def _as_expected(count: int | None, turns: int) -> str:
     return f"{count}/{turns}" if count is not None else "-"
 
@@ -199,11 +232,16 @@ def _turn(record: TurnRecord) -> list[str]:
         proposed = (f" (judge proposed {record.proposed_stage.value})"
                     if record.proposed_stage and record.proposed_stage != record.stage else "")
         outcome.append(f"stage {record.stage.value}{proposed}, DFMS {record.dfms_total:.2f} ({criteria})")
+    if record.ovs_total is not None:
+        criteria = ", ".join(f"{code} {score}" for code, score in record.ovs_scores().items())
+        tries = f" after {record.ovs_attempts} attempts" if record.ovs_attempts > 1 else ""
+        result = "fallback shown" if record.source == "fallback_message" else f"OVS {record.ovs_total:.2f}"
+        outcome.append(f"{result} ({criteria}){tries}")
     if record.persona_score is not None:
         outcome.append(f"persona {record.persona_score}/10")
     if record.narrative_score is not None:
         outcome.append(f"narrative {record.narrative_score}/10")
-    speaker = "Holmes" if record.source in ("generator", "redirect_message") else "System"
+    speaker = "Holmes" if record.source in ("generator", "redirect_message", "fallback_message") else "System"
     lines = [
         f"**Turn {record.turn}** · {record.kind.value.replace('_', ' ')} · {' · '.join(outcome)}",
         "",
@@ -218,6 +256,9 @@ def _turn(record: TurnRecord) -> list[str]:
         lines += [f"- {line}" for line in record.wics_reasoning.splitlines()] + [""]
     if record.guidance:
         lines += [f"_Guidance added: {record.guidance}._", ""]
+    if record.rejected_replies:
+        lines += ["_Rejected by output validation:_", ""]
+        lines += [f"- {reply}" for reply in record.rejected_replies.split("\n\n")] + [""]
     if record.persona_reasoning:
         lines += [f"_Judge: {record.persona_reasoning}_", ""]
     if record.narrative_reasoning:
@@ -230,4 +271,4 @@ def _quote(text: str) -> list[str]:
 
 
 def _score(value: float | None) -> str:
-    return f"{value:.2f}" if value is not None else "-"
+    return f"{value:.2f}" if value is not None else "-" 

@@ -23,6 +23,7 @@ from watson.evaluation.middleware_regression import (
     StepRegression,
     StepSummary,
     TurnRecord,
+    ValidationSummary,
     build_pipeline,
     find_regressions,
     load_dialogues,
@@ -30,6 +31,7 @@ from watson.evaluation.middleware_regression import (
     run_step,
     summarize_dialogue_flow,
     summarize_input_checks,
+    summarize_output_validation,
     summarize_step,
 )
 from watson.evaluation.narrative_consistency import NarrativeConsistencyJudge
@@ -54,13 +56,15 @@ def main() -> None:
     steps = {number: config.steps[number - 1] for number in sorted(set(numbers))}
     dialogues = load_dialogues(config.dialogues)
     turns = sum(len(d.turns) for d in dialogues)
-    # Per turn: generation, persona and narrative judges, plus one judge call per enabled checking component.
-    calls = sum(turns * (3 + step.modules.input_constraint + step.modules.dialogue_flow) for step in steps.values())
+    # Per turn: generation, persona and narrative judges, plus one judge call per enabled checking component
+    # (output validation retries add more; this is the minimum).
+    calls = sum(turns * (3 + step.modules.input_constraint + step.modules.dialogue_flow + step.modules.output_validation)
+                for step in steps.values())
     started = datetime.now()
     out_dir = resolve_path(f"experiments/middleware_regression/runs/{started:%Y-%m-%d_%H%M}")
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"Steps {', '.join(map(str, steps))} x {len(dialogues)} conversations ({turns} turns each step), "
-          f"about {calls} model calls: roughly {calls * SECONDS_PER_MODEL_CALL // 60} minutes.")
+          f"at least {calls} model calls: roughly {calls * SECONDS_PER_MODEL_CALL // 60} minutes or more.")
     print(f"Turns are saved as they finish to {out_dir / 'turns.csv'}\n")
 
     settings = get_settings()
@@ -90,6 +94,9 @@ def main() -> None:
             if r.dfms_total is not None:
                 proposed = f" (proposed {r.proposed_stage.value})" if r.proposed_stage != r.stage else ""
                 parts.append(f"{r.stage.value}{proposed}, DFMS {r.dfms_total:.2f}")
+            if r.ovs_total is not None:
+                result = "fallback" if r.source == "fallback_message" else f"OVS {r.ovs_total:.2f}"
+                parts.append(f"{result} after {r.ovs_attempts} attempt{'s' if r.ovs_attempts > 1 else ''}")
             if r.persona_score is not None:
                 parts.append(f"persona {r.persona_score}/10, narrative {r.narrative_score}/10")
             else:
@@ -107,14 +114,17 @@ def main() -> None:
     regressions = find_regressions(summaries, config.regression_tolerance)
     input_checks = summarize_input_checks(all_records, config.expected_decisions)
     flows = summarize_dialogue_flow(all_records)
+    validations = summarize_output_validation(all_records)
     print_report(summaries, regressions, config.regression_tolerance)
     print_input_checks(input_checks)
     print_flows(flows)
+    print_validations(validations)
     (out_dir / "summary.json").write_text(
         json.dumps(
             {"steps": [s.model_dump() for s in summaries],
              "input_checks": [s.model_dump(mode="json") for s in input_checks],
-             "dialogue_flow": [s.model_dump(mode="json") for s in flows]},
+             "dialogue_flow": [s.model_dump(mode="json") for s in flows],
+             "output_validation": [s.model_dump(mode="json") for s in validations]},
             indent=2,
         ),
         encoding="utf-8",
@@ -122,7 +132,8 @@ def main() -> None:
     report_path = resolve_path(f"experiments/middleware_regression/reports/{started:%Y-%m-%d_%H%M}_report.md")
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(
-        render_report(details, config, dialogues, summaries, regressions, all_records, input_checks, flows),
+        render_report(details, config, dialogues, summaries, regressions, all_records, input_checks, flows,
+                      validations),
         encoding="utf-8",
     )
     print(f"\nEvery turn, reply and the judge's reasoning: {out_dir / 'turns.csv'}")
@@ -134,13 +145,14 @@ def print_report(summaries: list[StepSummary], regressions: list[StepRegression]
         return f"{value:.2f}" if value is not None else "-"
 
     print(f"\n{'Step':<44}{'Persona':>9}{'Persona':>9}{'Narrat.':>9}{'Repeti-':>9}{'Drift':>9}{'Normal':>9}"
-          f"{'Avg time':>10}")
-    print(f"{'':<44}{'normal':>9}{'drift':>9}{'normal':>9}{'tion':>9}{'caught':>9}{'blocked':>9}{'per turn':>10}")
+          f"{'Fall-':>7}{'Avg time':>10}")
+    print(f"{'':<44}{'normal':>9}{'drift':>9}{'normal':>9}{'tion':>9}{'caught':>9}{'blocked':>9}"
+          f"{'backs':>7}{'per turn':>10}")
     for s in summaries:
         print(f"{s.step:<2} {s.name:<41}{score(s.persona_normal):>9}{score(s.persona_drift):>9}"
               f"{score(s.narrative_normal):>9}{score(s.repetition):>9}"
               f"{f'{s.drift_caught}/{s.drift_total}':>9}{f'{s.normal_blocked}/{s.normal_total}':>9}"
-              f"{s.mean_latency_ms / 1000:>9.1f}s")
+              f"{s.fallbacks:>7}{s.mean_latency_ms / 1000:>9.1f}s")
 
     print("\nPersona normal = mean persona score (1-10) of Holmes' replies to normal turns.")
     print("Persona drift  = the same for drift-inducing turns that still reached Holmes.")
@@ -148,6 +160,7 @@ def print_report(summaries: list[StepSummary], regressions: list[StepRegression]
     print("Repetition     = share (0-1) of each reply's three-word sequences Holmes already used earlier.")
     print("Drift caught   = drift-inducing turns the middleware redirected or rejected.")
     print("Normal blocked = normal turns the middleware wrongly redirected or rejected.")
+    print("Fallbacks      = turns where every reply failed output validation.")
 
     print(f"\nRegressions (persona normal falling more than {tolerance:g} from the previous step):")
     if not regressions:
@@ -185,6 +198,18 @@ def print_flows(summaries: list[FlowSummary]) -> None:
               + f"{f'{s.guided_turns}/{s.turns}':>9}   {stages}")
         proposed = ", ".join(f"{stage.value} {count}" for stage, count in s.proposed_stages.items())
         print(f"{'':<6}Stages the judge proposed: {proposed or '-'}")
+
+
+def print_validations(summaries: list[ValidationSummary]) -> None:
+    if not summaries:
+        return
+    print("\nOutput validation (replies passed at once, after a retry, or replaced by the fallback):")
+    print(f"{'Step':<6}{'Turns':>6}{'First':>7}{'Retry':>7}{'Fallbk':>8}{'Tries':>7}{'OVS 1st':>9}{'OVS shown':>11}"
+          f"{'PCC':>6}{'NC':>6}{'HWB':>6}{'SS':>6}")
+    for s in summaries:
+        print(f"{s.step:<6}{s.turns:>6}{s.passed_first:>7}{s.passed_after_retry:>7}{s.fallbacks:>8}"
+              f"{s.mean_attempts:>7.2f}{s.first_ovs:>9.2f}{s.final_ovs:>11.2f}"
+              + "".join(f"{v:>6.1f}" for v in s.first_criteria.values()))
 
 
 if __name__ == "__main__":

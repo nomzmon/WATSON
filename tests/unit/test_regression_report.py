@@ -9,6 +9,7 @@ from watson.evaluation.middleware_regression import (
     load_experiment_config,
     summarize_dialogue_flow,
     summarize_input_checks,
+    summarize_output_validation,
     summarize_step,
 )
 from watson.evaluation.regression_report import RunDetails, code_version, render_report
@@ -46,13 +47,20 @@ GUIDED = dict(
     guidance="DS-EVIDENCE (level 1), NP-NO-PREMATURE-CONCLUSION (level 1)",
     narrative_score=5, narrative_reasoning="Invents a witness.", repetition=0.25,
 )
+VALIDATED = dict(
+    GUIDED, ovs_total=8.8, ovs_pcc=9, ovs_nc=9, ovs_hwb=9, ovs_ss=6, ovs_first=6.3,
+    ovs_first_scores="PCC 7, NC 5, HWB 9, SS 3", ovs_attempts=2,
+    rejected_replies="OVS 6.30 (PCC 7, NC 5, HWB 9, SS 3): (Holmes leans forward) The butler did it.",
+)
 RECORDS = [
     record(1, TurnKind.PERSONA_BREAKING, "generator", None, 3),
     record(2, TurnKind.PERSONA_BREAKING, "reject_message", DecisionType.REJECT, None, **REJECTED),
     record(4, TurnKind.NORMAL, "generator", DecisionType.ACCEPT, 8, **GUIDED),
+    record(5, TurnKind.NORMAL, "generator", DecisionType.ACCEPT, 9, **VALIDATED),
 ]
 INPUT_CHECKS = summarize_input_checks(RECORDS, CONFIG.expected_decisions)
 FLOWS = summarize_dialogue_flow(RECORDS)
+VALIDATIONS = summarize_output_validation(RECORDS)
 SUMMARIES = [summarize_step(r.step, CONFIG.steps[r.step - 1].name, [r]) for r in RECORDS]
 
 
@@ -68,10 +76,10 @@ def test_report_records_how_the_run_was_made():
 def test_report_has_a_row_per_step_with_its_components():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
 
-    assert "| 1 | persona prompt only | baseline_persona | none | - | 3.00 | - | - | 0/1 | 0/0 | 2.0 s |" in report
+    assert "| 1 | persona prompt only | baseline_persona | none | - | 3.00 | - | - | 0/1 | 0/0 | 0 | 2.0 s |" in report
     assert "| 2 | + input constraint and decision layer | baseline_persona | input constraint, decision layer |" in report
     assert ("| 4 | + dialogue flow manager | structured_prompt | input constraint, dialogue flow, decision layer "
-            "| 8.00 | - | 5.00 | 0.25 | 0/0 | 0/1 | 2.0 s |") in report
+            "| 8.00 | - | 5.00 | 0.25 | 0/0 | 0/1 | 0 | 2.0 s |") in report
 
 
 def test_report_lists_regressions_or_says_there_were_none():
@@ -131,6 +139,25 @@ def test_report_shows_the_dialogue_flow_and_narrative_score_of_each_turn():
 
 def test_report_leaves_out_the_dialogue_flow_table_without_the_dialogue_flow_manager():
     assert "## Dialogue flow" not in render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS)
+
+
+def test_report_has_an_output_validation_table():
+    report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS, VALIDATIONS)
+
+    assert ("| Step | Turns | Passed first | Passed after retry | Fallbacks | Mean attempts | OVS first | OVS shown "
+            "| PCC | NC | HWB | SS |") in report
+    assert "| 5 | 1 | 0 | 1 | 0 | 2.00 | 6.30 | 8.80 | 7.0 | 5.0 | 9.0 | 3.0 |" in report
+
+
+def test_report_shows_each_turn_s_validation_and_rejected_replies():
+    report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS, INPUT_CHECKS, FLOWS, VALIDATIONS)
+
+    assert "OVS 8.80 (PCC 9, NC 9, HWB 9, SS 6) after 2 attempts · persona 9/10" in report
+    assert "_Rejected by output validation:_\n\n- OVS 6.30 (PCC 7, NC 5, HWB 9, SS 3): (Holmes leans forward)" in report
+
+
+def test_report_leaves_out_the_output_validation_table_without_the_engine():
+    assert "## Output validation" not in render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
 
 
 def test_report_leaves_space_for_the_group_s_observations():

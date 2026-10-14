@@ -2,11 +2,12 @@
 
 Each step enables one more middleware component than the step before it. Every
 step replays the same scripted conversations with the same seeds, and every
-generated Holmes reply gets a persona consistency score and a narrative
+Holmes reply the visitor sees gets a persona consistency score and a narrative
 consistency score. A step "works" if it improves what its component targets
 (e.g. the Input Constraint Engine catching drift-inducing turns, the Dialogue
-Flow Manager keeping the investigation coherent); it regresses if the persona
-score on normal turns falls compared with the previous step.
+Flow Manager keeping the investigation coherent, the Output Validation Engine
+catching bad replies); it regresses if the persona score on normal turns falls
+compared with the previous step.
 """
 
 from __future__ import annotations
@@ -34,6 +35,8 @@ from watson.middleware.dialogue_flow.manager import DialogueFlowManager, FlowRes
 from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.input_constraint.engine import InputConstraintEngine
 from watson.middleware.input_constraint.scoring import WICS_CRITERIA
+from watson.middleware.output_validation.retry import OutputValidationEngine, ValidationResult
+from watson.middleware.output_validation.validator import OVS_CRITERIA
 from watson.middleware.prompt_builder.builder import PromptBuilder
 from watson.pipeline.orchestrator import Pipeline
 from watson.pipeline.session import ConversationSession
@@ -72,17 +75,17 @@ class StepConfig(BaseModel):
     @field_validator("modules")
     @classmethod
     def _only_built_components(cls, modules: ModuleToggles) -> ModuleToggles:
-        if modules.output_validation:
-            raise ValueError("the Output Validation Engine is not built yet")
         if modules.input_constraint != modules.decision_layer:
             raise ValueError("the Input Constraint Engine and the Decision Layer must be enabled together")
         return modules
 
     @model_validator(mode="after")
-    def _flow_needs_guidance_section(self) -> StepConfig:
+    def _guidance_needs_a_section_in_the_template(self) -> StepConfig:
         # Checked here so a bad step fails before the run starts, not halfway through it.
-        if self.modules.dialogue_flow and "{constraints}" not in load_text(self.template):
-            raise ValueError(f"the Dialogue Flow Manager needs a template with a {{constraints}} section: {self.template}")
+        guided = self.modules.dialogue_flow or self.modules.output_validation
+        if guided and "{constraints}" not in load_text(self.template):
+            raise ValueError("the Dialogue Flow Manager and Output Validation Engine need a template with a "
+                             f"{{constraints}} section: {self.template}")
         return self
 
 
@@ -121,6 +124,17 @@ class TurnRecord(BaseModel):
     dfms_tbc: int | None = None
     guidance: str = ""  # selected constraints as "ID (level N)", comma-separated
     dfms_reasoning: str = ""
+    # Output validation of the reply shown (or, after a fallback, of the last attempt); empty without the engine
+    ovs_total: float | None = None
+    ovs_pcc: int | None = None
+    ovs_nc: int | None = None
+    ovs_hwb: int | None = None
+    ovs_ss: int | None = None
+    ovs_first: float | None = None  # OVS of the first attempt
+    ovs_first_scores: str = ""  # criterion scores of the first attempt, as "PCC 7, NC 4, HWB 10, SS 8"
+    ovs_attempts: int | None = None  # replies generated, including the first
+    ovs_reasoning: str = ""
+    rejected_replies: str = ""  # replies that failed validation, with their OVS, separated by blank lines
     source: str
     reply: str
     persona_score: int | None
@@ -136,6 +150,14 @@ class TurnRecord(BaseModel):
     def dfms_scores(self) -> dict[str, int | None]:
         return {code: getattr(self, f"dfms_{code.lower()}") for code in DFMS_CRITERIA}
 
+    def ovs_scores(self) -> dict[str, int | None]:
+        return {code: getattr(self, f"ovs_{code.lower()}") for code in OVS_CRITERIA}
+
+    @property
+    def reached_holmes(self) -> bool:
+        """The visitor got a reply in Holmes' voice from the generator (or its fallback), not a fixed message."""
+        return self.source in ("generator", "fallback_message")
+
 
 class StepSummary(BaseModel):
     step: int
@@ -149,6 +171,7 @@ class StepSummary(BaseModel):
     mean_latency_ms: float
     narrative_normal: float | None = None  # mean narrative score of generated replies to normal and rushing turns
     repetition: float | None = None  # mean repetition of all generated replies
+    fallbacks: int = 0  # turns where every reply failed validation and the fallback was shown
 
 
 class StepRegression(BaseModel):
@@ -181,6 +204,20 @@ class FlowSummary(BaseModel):
     proposed_stages: dict[DialogueStage, int] = Field(default_factory=dict)  # how often the judge proposed each stage
 
 
+class ValidationSummary(BaseModel):
+    """What the Output Validation Engine did in one step."""
+
+    step: int
+    turns: int  # turns whose reply was validated
+    passed_first: int  # first reply passed
+    passed_after_retry: int  # a regenerated reply passed
+    fallbacks: int  # every reply failed, so the fallback was shown
+    mean_attempts: float
+    first_ovs: float  # mean OVS of the first reply
+    final_ovs: float  # mean OVS of the reply shown (or the last attempt, after a fallback)
+    first_criteria: dict[str, float]  # mean criterion scores of the first reply
+
+
 def load_experiment_config(path: str | Path = "configs/experiments/middleware_regression.yaml") -> ExperimentConfig:
     return ExperimentConfig.model_validate(load_yaml(path))
 
@@ -210,13 +247,14 @@ def load_turn_records(path: str | Path) -> list[TurnRecord]:
 def history_before_each_turn(records: list[TurnRecord]) -> dict[tuple[int, str, int], list[HistoryTurn]]:
     """The conversation history each turn of a run was answered after, keyed by (step, dialogue_id, turn).
 
-    Rebuilt the way the pipeline keeps it: generated and redirected replies enter the history, rejected turns don't.
+    Rebuilt the way the pipeline keeps it: generated, fallback and redirected replies enter the history, rejected
+    turns don't.
     """
     histories, running = {}, {}
     for r in sorted(records, key=lambda r: (r.step, r.dialogue_id, r.turn)):
         history = running.setdefault((r.step, r.dialogue_id), [])
         histories[(r.step, r.dialogue_id, r.turn)] = list(history)
-        if r.source in ("generator", "redirect_message"):
+        if r.source in ("generator", "fallback_message", "redirect_message"):
             history += [HistoryTurn(role="user", text=r.message), HistoryTurn(role="holmes", text=r.reply)]
     return histories
 
@@ -232,6 +270,8 @@ def build_pipeline(step: StepConfig, profile_path: str, generator: ResponseGener
         )
     if step.modules.dialogue_flow:
         components["dialogue_flow"] = DialogueFlowManager.from_config(judge)
+    if step.modules.output_validation:
+        components["output_validation"] = OutputValidationEngine.from_config(judge, profile_path)
     return Pipeline(builder, generator, **components)
 
 
@@ -251,7 +291,7 @@ def run_step(
         for turn_index, turn in enumerate(dialogue.turns):
             history_before = list(session.history)
             result = pipeline.run_turn(session, turn.message, seed=seed + 100 * dialogue_index + turn_index)
-            generated = result.source == "generator"
+            generated = result.source in ("generator", "fallback_message")  # replies in Holmes' voice
             persona = persona_judge.score(history_before, turn.message, result.reply) if generated else None
             narrative = (
                 narrative_judge.score(dialogue.case_context, history_before, turn.message, result.reply)
@@ -269,6 +309,7 @@ def run_step(
                 decision=result.decision.decision if result.decision else None,
                 **_input_check_fields(result.wics, result.decision.reasons if result.decision else []),
                 **_flow_fields(result.flow),
+                **_validation_fields(result.validation),
                 source=result.source,
                 reply=result.reply,
                 persona_score=persona.score if persona else None,
@@ -307,6 +348,34 @@ def _flow_fields(flow: FlowResult | None) -> dict:
         "guidance": ", ".join(f"{c.id} (level {c.level})" for c in flow.constraints),
         "dfms_reasoning": "\n".join(f"{c.code} {c.score:g}: {c.rationale}" for c in criteria),
     }
+
+
+def _validation_fields(validation: ValidationResult | None) -> dict:
+    if validation is None:
+        return {}
+    final = validation.attempts[-1].ovs
+    criteria = [final.criteria[code] for code in OVS_CRITERIA]
+    rejected = [a for a in validation.attempts if not a.passed]
+    return {
+        "ovs_total": final.weighted_total,
+        **{f"ovs_{c.code.lower()}": int(c.score) for c in criteria},
+        "ovs_first": validation.attempts[0].ovs.weighted_total,
+        "ovs_first_scores": _format_scores(validation.attempts[0].ovs),
+        "ovs_attempts": len(validation.attempts),
+        "ovs_reasoning": "\n".join(f"{c.code} {c.score:g}: {c.rationale}" for c in criteria),
+        "rejected_replies": "\n\n".join(
+            f"OVS {a.ovs.weighted_total:.2f} ({_format_scores(a.ovs)}): {a.reply}" for a in rejected
+        ),
+    }
+
+
+def _format_scores(ovs: RubricScore) -> str:
+    return ", ".join(f"{code} {ovs.criteria[code].score:g}" for code in OVS_CRITERIA)
+
+
+def _parse_scores(text: str) -> dict[str, float]:
+    """The reverse of _format_scores: "PCC 7, NC 4" -> {"PCC": 7.0, "NC": 4.0}."""
+    return {code: float(score) for code, score in (part.split() for part in text.split(", "))}
 
 
 def _trigrams(text: str) -> set[tuple[str, ...]]:
@@ -371,12 +440,35 @@ def summarize_dialogue_flow(records: list[TurnRecord]) -> list[FlowSummary]:
     return summaries
 
 
+def summarize_output_validation(records: list[TurnRecord]) -> list[ValidationSummary]:
+    """Per step with the Output Validation Engine: first-try passes, retries, fallbacks and mean OVS."""
+    summaries = []
+    validated = [r for r in records if r.ovs_total is not None]
+    for step in sorted({r.step for r in validated}):
+        group = [r for r in validated if r.step == step]
+        fallbacks = sum(r.source == "fallback_message" for r in group)
+        passed_first = sum(r.ovs_attempts == 1 and r.source == "generator" for r in group)
+        first_scores = [_parse_scores(r.ovs_first_scores) for r in group]
+        summaries.append(ValidationSummary(
+            step=step,
+            turns=len(group),
+            passed_first=passed_first,
+            passed_after_retry=len(group) - passed_first - fallbacks,
+            fallbacks=fallbacks,
+            mean_attempts=round(mean(r.ovs_attempts for r in group), 2),
+            first_ovs=round(mean(r.ovs_first for r in group), 2),
+            final_ovs=round(mean(r.ovs_total for r in group), 2),
+            first_criteria={code: round(mean(s[code] for s in first_scores), 2) for code in OVS_CRITERIA},
+        ))
+    return summaries
+
+
 def summarize_step(step_index: int, name: str, records: list[TurnRecord]) -> StepSummary:
     def average(values: list[float | None]) -> float | None:
         values = [v for v in values if v is not None]
         return round(mean(values), 2) if values else None
 
-    blocked = [r for r in records if r.source != "generator"]
+    blocked = [r for r in records if r.source in ("redirect_message", "reject_message")]
     normal = [r for r in records if not r.kind.is_drift]
     return StepSummary(
         step=step_index,
@@ -390,6 +482,7 @@ def summarize_step(step_index: int, name: str, records: list[TurnRecord]) -> Ste
         mean_latency_ms=round(mean(r.latency_ms for r in records), 1),
         narrative_normal=average([r.narrative_score for r in normal]),
         repetition=average([r.repetition for r in records]),
+        fallbacks=sum(r.source == "fallback_message" for r in records),
     )
 
 

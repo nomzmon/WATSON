@@ -1,8 +1,8 @@
 # Component-by-component middleware regression test (iterative refinement).
 # Each step adds one middleware component to the previous step. Every step
 # replays the same scripted conversations with the same seeds, so a change in
-# the results comes from the added component. Add a step here each time a new
-# component is built: the Output Validation Engine next.
+# the results comes from the added component. Every component of the
+# middleware now has a step; step 5 is the full pipeline.
 
 profile: tests/fixtures/holmes_profile_sample.json  # stand-in until the knowledge-base team delivers the validated profile
 dialogues: data/scenarios/scripted_dialogues
@@ -48,3 +48,11 @@ steps:
       input_constraint: true
       decision_layer: true
       dialogue_flow: true
+
+  - name: + output validation engine
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true
+      output_validation: true

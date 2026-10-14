@@ -12,6 +12,7 @@ from watson.evaluation.middleware_regression import (
     TurnRecord,
     build_pipeline,
     find_regressions,
+    history_before_each_turn,
     load_dialogues,
     load_experiment_config,
     load_turn_records,
@@ -19,6 +20,7 @@ from watson.evaluation.middleware_regression import (
     run_step,
     summarize_dialogue_flow,
     summarize_input_checks,
+    summarize_output_validation,
     summarize_step,
 )
 from watson.evaluation.narrative_consistency import NarrativeConsistencyJudge
@@ -37,20 +39,28 @@ class FakeGemma(LLMClient):
 
     def _generate(self, prompt: str, **kwargs) -> str:
         self.seeds.append(kwargs["seed"])
-        return "Elementary."
+        # Output validation retries use seed + 1000, which here gives a different reply.
+        return "Elementary." if kwargs["seed"] < 1000 else "Quite so. The mud by the window tells us much."
 
 
 class FakeJudge(LLMClient):
     """Plays every judge. WICS gives drift messages 2 and others 9; the persona score is always 7 and the
-    narrative score 6; the dialogue flow judge reports weak narrative progression and proposes the suspects stage."""
+    narrative score 6; the dialogue flow judge reports weak narrative progression and proposes the suspects stage;
+    output validation fails "Elementary." on narrative coherence (or every reply, with always_fail) and passes others."""
 
     model_name = "fake-judge"
 
-    def __init__(self) -> None:
+    def __init__(self, always_fail: bool = False) -> None:
+        self.always_fail = always_fail
         self.persona_prompts: list[str] = []
         self.narrative_prompts: list[str] = []
 
     def _generate(self, prompt: str, **kwargs) -> str:
+        if "Candidate reply as Holmes" in prompt:
+            reply = prompt.split("Candidate reply as Holmes\n<<<\n")[1].split("\n>>>")[0]
+            nc = 4 if self.always_fail or reply == "Elementary." else 9
+            scores = {"PCC": 9, "NC": nc, "HWB": 10, "SS": 8}
+            return json.dumps({c: {"reasoning": f"{c} r", "score": s} for c, s in scores.items()})
         if "persona profile" in prompt:
             self.persona_prompts.append(prompt)
             return json.dumps({"reasoning": "in character", "score": 7})
@@ -82,10 +92,12 @@ def run(step_index: int, gemma: FakeGemma | None = None, judge: FakeJudge | None
 
 
 def test_repo_config_adds_one_component_per_step():
-    assert [step.modules.input_constraint for step in CONFIG.steps] == [False, True, True, True]
-    assert [step.modules.dialogue_flow for step in CONFIG.steps] == [False, False, False, True]
+    assert [step.modules.input_constraint for step in CONFIG.steps] == [False, True, True, True, True]
+    assert [step.modules.dialogue_flow for step in CONFIG.steps] == [False, False, False, True, True]
+    assert [step.modules.output_validation for step in CONFIG.steps] == [False, False, False, False, True]
     assert [step.template.split("/")[-1] for step in CONFIG.steps] == [
-        "baseline_persona.txt", "baseline_persona.txt", "structured_prompt.txt", "structured_prompt.txt"
+        "baseline_persona.txt", "baseline_persona.txt", "structured_prompt.txt", "structured_prompt.txt",
+        "structured_prompt.txt",
     ]
 
 
@@ -103,9 +115,10 @@ def test_every_dialogue_mixes_normal_and_drift_turns():
         assert any(kind.is_drift for kind in kinds), dialogue.id
 
 
-def test_steps_cannot_enable_components_that_are_not_built():
-    with pytest.raises(ValidationError, match="not built yet"):
-        StepConfig(name="x", template="t", modules=ModuleToggles(output_validation=True))
+def test_output_validation_step_needs_a_template_with_a_guidance_section():
+    with pytest.raises(ValidationError, match="constraints"):
+        StepConfig(name="x", template="prompts/generation/baseline_persona.txt",
+                   modules=ModuleToggles(output_validation=True))
 
 
 def test_dialogue_flow_step_needs_a_template_with_a_guidance_section():
@@ -173,6 +186,36 @@ def test_every_generated_reply_gets_a_narrative_score_with_the_case():
 
     assert all(r.narrative_score == 6 and r.narrative_reasoning == "consistent" for r in records)
     assert DIALOGUES[0].case_context in judge.narrative_prompts[0]
+
+
+def test_output_validation_step_records_the_retry_and_the_rejected_reply():
+    records = run(5)
+
+    reached = [r for r in records if r.reached_holmes]
+    assert all(r.source == "generator" and r.ovs_attempts == 2 for r in reached)
+    first = reached[0]
+    assert first.reply == "Quite so. The mud by the window tells us much."
+    assert (first.ovs_first, first.ovs_total) == (7.6, 9.1)  # NC 4 then 9
+    assert first.ovs_first_scores == "PCC 9, NC 4, HWB 10, SS 8"
+    assert first.rejected_replies == "OVS 7.60 (PCC 9, NC 4, HWB 10, SS 8): Elementary."
+    assert all(r.ovs_total is None for r in records if not r.reached_holmes)
+
+
+def test_when_every_reply_fails_the_fallback_is_shown_scored_and_counted():
+    records = run(5, judge=FakeJudge(always_fail=True))
+    summary = summarize_step(5, "validated", records)
+
+    fallbacks = [r for r in records if r.source == "fallback_message"]
+    assert len(fallbacks) == sum(not t.kind.is_drift for d in DIALOGUES for t in d.turns)
+    assert all(r.ovs_attempts == 3 and r.persona_score == 7 for r in fallbacks)
+    assert (summary.fallbacks, summary.normal_blocked) == (len(fallbacks), 0)  # a fallback is not a blocked turn
+    # The fallback is in Holmes' voice, so the pipeline keeps it in the history the next turn is answered after.
+    second = history_before_each_turn(records)[(5, "dialogue_01", 2)]
+    assert (second[-1].role, second[-1].text) == ("holmes", fallbacks[0].reply)
+
+
+def test_steps_without_output_validation_record_no_ovs():
+    assert all(r.ovs_total is None and r.rejected_replies == "" for r in run(4))
 
 
 def test_baseline_step_records_no_wics_scores():
@@ -268,6 +311,22 @@ def test_dialogue_flow_summary_gives_mean_dfms_guidance_and_final_stages():
 
 def test_dialogue_flow_summary_is_empty_without_the_dialogue_flow_manager():
     assert summarize_dialogue_flow(run(2)) == []
+
+
+def test_output_validation_summary_counts_first_passes_retries_and_fallbacks():
+    [retried] = summarize_output_validation(run(5))
+    [failed] = summarize_output_validation(run(5, judge=FakeJudge(always_fail=True)))
+
+    validated = sum(not t.kind.is_drift for d in DIALOGUES for t in d.turns)
+    assert (retried.turns, retried.passed_first, retried.passed_after_retry) == (validated, 0, validated)
+    assert retried.fallbacks == 0
+    assert (retried.mean_attempts, retried.first_ovs, retried.final_ovs) == (2.0, 7.6, 9.1)
+    assert retried.first_criteria == {"PCC": 9.0, "NC": 4.0, "HWB": 10.0, "SS": 8.0}
+    assert (failed.fallbacks, failed.mean_attempts) == (validated, 3.0)
+
+
+def test_output_validation_summary_is_empty_without_the_engine():
+    assert summarize_output_validation(run(4)) == []
 
 
 def test_repetition_is_the_share_of_reused_word_trigrams():
