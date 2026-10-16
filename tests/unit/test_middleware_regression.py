@@ -216,7 +216,7 @@ def test_when_every_reply_fails_the_fallback_is_shown_scored_and_counted():
 class StageDirectionGemma(FakeGemma):
     def _generate(self, prompt: str, **kwargs) -> str:
         reply = super()._generate(prompt, **kwargs)
-        return f"(Holmes leans forward) {reply}" if kwargs["seed"] < 1000 else reply
+        return f"(Holmes leans forward)\n\n{reply}" if kwargs["seed"] < 1000 else reply
 
 
 def test_output_validation_step_records_what_the_safety_filter_flagged():
@@ -226,8 +226,11 @@ def test_output_validation_step_records_what_the_safety_filter_flagged():
     first = next(r for r in records if r.reached_holmes)
     assert first.filter_flags == 'stage direction "(Holmes leans forward)"'
     assert first.ovs_first_scores == "PCC 9, NC 9, HWB 10, SS 2"  # the judge passed it; the filter capped SS
-    assert '[filter: stage direction "(Holmes leans forward)"]: (Holmes leans forward) Elementary.' in (
-        first.rejected_replies)
+    # The rejected reply's blank line is joined, so it stays one entry in the report.
+    assert first.rejected_replies == (
+        'OVS 8.50 (PCC 9, NC 9, HWB 10, SS 2) [filter: stage direction "(Holmes leans forward)"]: '
+        "(Holmes leans forward) Elementary."
+    )
     assert first.reply == "Quite so. The mud by the window tells us much."
     assert summary.filtered_first == summary.turns
 

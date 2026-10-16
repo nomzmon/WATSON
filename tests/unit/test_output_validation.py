@@ -104,6 +104,12 @@ def test_a_reply_passes_only_with_a_high_enough_ovs_and_no_very_low_criterion(sc
 def test_repo_settings_allow_two_retries():
     assert load_validation_settings().max_retries == 2
 
+def test_repo_fallback_message_is_only_holmes_words():
+    # A comment pasted with the wrong indentation once became part of the fallback reply.
+    fallback = OutputValidationEngine.from_config(ScriptedJudge(GOOD), PROFILE).fallback_message
+
+    assert fallback.startswith("Forgive me") and fallback.endswith("what you observed.")
+    assert "#" not in fallback and "\n" not in fallback
 
 # --- Constraint refinement ---------------------------------------------------------------
 

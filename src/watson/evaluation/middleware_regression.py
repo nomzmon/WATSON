@@ -368,11 +368,14 @@ def _validation_fields(validation: ValidationResult | None) -> dict:
         "filter_flags": "; ".join(v.describe() for v in validation.attempts[0].violations),
         "ovs_reasoning": "\n".join(f"{c.code} {c.score:g}: {c.rationale}" for c in criteria),
         "rejected_replies": "\n\n".join(
-            f"OVS {a.ovs.weighted_total:.2f} ({_format_scores(a.ovs)}){_flagged(a.violations)}: {a.reply}"
+            f"OVS {a.ovs.weighted_total:.2f} ({_format_scores(a.ovs)}){_flagged(a.violations)}: {_one_line(a.reply)}"
             for a in rejected
         ),
     }
 
+def _one_line(reply: str) -> str:
+    """Line breaks joined, so a rejected reply with blank lines stays one entry in rejected_replies."""
+    return " ".join(reply.split())
 
 def _flagged(violations: list[FilterViolation]) -> str:
     return f" [filter: {'; '.join(v.describe() for v in violations)}]" if violations else ""

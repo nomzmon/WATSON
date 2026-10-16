@@ -26,7 +26,7 @@ fallback_message: >-
   Forgive me, my thoughts have run ahead of the facts. Let us return to what we
   know for certain. Tell me again, as precisely as you can, what you observed.
 
-  # Secondary filtering pass (thesis Section 3.5.3), run after the judge on every
+# Secondary filtering pass (thesis Section 3.5.3), run after the judge on every
 # candidate reply. DRAFT for group review. Rules that the judge was found to
 # miss in run 5 (2026-10-14): a flagged criterion is capped at `score_cap`, so
 # the reply fails validation and is regenerated.
