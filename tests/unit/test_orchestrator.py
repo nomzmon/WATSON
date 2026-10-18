@@ -227,6 +227,28 @@ def test_validation_keeps_the_dialogue_flow_guidance_without_repeating_it():
     assert prompt.count("- Do not announce a final conclusion before the evidence supports it.") == 1
     assert "Current stage of the investigation: evidence" in prompt
 
+class StageDirectionGemma(FakeGemma):
+    def _generate(self, prompt: str, **kwargs) -> str:
+        return f"(Holmes leans forward) {super()._generate(prompt, **kwargs)}"
+
+
+def test_stage_directions_are_cut_before_the_reply_is_shown():
+    session = ConversationSession()
+
+    result = make_pipeline(StageDirectionGemma()).run_turn(session, "What of the footprints?")
+
+    assert (result.reply, result.removed_from_reply) == ("Elementary.", ["(Holmes leans forward)"])
+    assert session.history[-1].text == "Elementary."
+
+
+def test_stage_directions_are_cut_before_validation_so_no_retry_is_needed():
+    gemma = StageDirectionGemma()
+
+    result = make_validated_pipeline(gemma, ovs_score=9).run_turn(ConversationSession(), "What of the footprints?")
+
+    assert (result.reply, result.removed_from_reply) == ("Elementary.", ["(Holmes leans forward)"])
+    assert len(gemma.calls) == 1
+    assert result.validation.attempts[0].violations == []
 
 def test_output_validation_needs_a_template_with_a_guidance_section():
     builder = PromptBuilder.from_config(profile_path=PROFILE, template_path="prompts/generation/baseline_persona.txt")

@@ -23,10 +23,8 @@ from pydantic import BaseModel
 from watson.common.config import load_yaml
 from watson.common.rubric import weighted_score
 from watson.common.schemas import CriterionScore, RubricScore
+from watson.middleware.generation.generator import stage_directions
 
-# Bracketed text with no first- or second-person word is Holmes being described, not Holmes speaking.
-_BRACKETED = re.compile(r"\(([^()]*)\)|\[([^\[\]]*)\]|\*([^*\n]+\s[^*\n]+)\*")
-_SPEAKER_WORDS = re.compile(r"\b(?:I|me|my|myself|we|us|our|you|your)\b", re.IGNORECASE)
 _NAME_LABEL = re.compile(
     r"^\s*(?:Sherlock\s+Holmes|Holmes|Dr\.?\s+Watson|Watson|Visitor|User|Assistant)\s*:", re.IGNORECASE | re.MULTILINE
 )
@@ -68,16 +66,16 @@ class SafetyFilter:
         return cls(settings) if settings.enabled else None
 
     def check(self, reply: str) -> list[FilterViolation]:
-        violations = []
-        for match in _BRACKETED.finditer(reply):
-            inside = next(group for group in match.groups() if group is not None)
-            if not _SPEAKER_WORDS.search(inside):
-                violations.append(FilterViolation(rule="stage direction", criterion="SS", evidence=match.group()))
+        # The Response Generation Layer removes stage directions; one left here means the reply was nothing else.
+        directions = stage_directions(reply)
+        violations = [FilterViolation(rule="stage direction", criterion="SS", evidence=d) for d in directions]
         violations += [FilterViolation(rule="name label", criterion="SS", evidence=m.group().strip())
                        for m in _NAME_LABEL.finditer(reply)]
-        outside_brackets = _BRACKETED.sub(" ", reply)  # a stage direction is not counted again as narration
+        outside_directions = reply
+        for direction in directions:  # a stage direction is not counted again as narration
+            outside_directions = outside_directions.replace(direction, " ")
         violations += [FilterViolation(rule="narration", criterion="SS", evidence=m.group())
-                       for m in _NARRATION.finditer(outside_brackets)]
+                       for m in _NARRATION.finditer(outside_directions)]
         if open_quote := _open_quotation(reply):
             violations.append(FilterViolation(rule="open quotation", criterion="SS", evidence=open_quote))
         if self._modern:

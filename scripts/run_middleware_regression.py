@@ -145,14 +145,14 @@ def print_report(summaries: list[StepSummary], regressions: list[StepRegression]
         return f"{value:.2f}" if value is not None else "-"
 
     print(f"\n{'Step':<44}{'Persona':>9}{'Persona':>9}{'Narrat.':>9}{'Repeti-':>9}{'Drift':>9}{'Normal':>9}"
-          f"{'Fall-':>7}{'Avg time':>10}")
+          f"{'Fall-':>7}{'Direc-':>8}{'Avg time':>10}")
     print(f"{'':<44}{'normal':>9}{'drift':>9}{'normal':>9}{'tion':>9}{'caught':>9}{'blocked':>9}"
-          f"{'backs':>7}{'per turn':>10}")
+          f"{'backs':>7}{'tions':>8}{'per turn':>10}")
     for s in summaries:
         print(f"{s.step:<2} {s.name:<41}{score(s.persona_normal):>9}{score(s.persona_drift):>9}"
               f"{score(s.narrative_normal):>9}{score(s.repetition):>9}"
               f"{f'{s.drift_caught}/{s.drift_total}':>9}{f'{s.normal_blocked}/{s.normal_total}':>9}"
-              f"{s.fallbacks:>7}{s.mean_latency_ms / 1000:>9.1f}s")
+              f"{s.fallbacks:>7}{s.directions_removed:>8}{s.mean_latency_ms / 1000:>9.1f}s")
 
     print("\nPersona normal = mean persona score (1-10) of Holmes' replies to normal turns.")
     print("Persona drift  = the same for drift-inducing turns that still reached Holmes.")
@@ -161,6 +161,7 @@ def print_report(summaries: list[StepSummary], regressions: list[StepRegression]
     print("Drift caught   = drift-inducing turns the middleware redirected or rejected.")
     print("Normal blocked = normal turns the middleware wrongly redirected or rejected.")
     print("Fallbacks      = turns where every reply failed output validation.")
+    print("Directions     = replies shown with stage directions such as \"(Holmes leans forward)\" cut out.")
 
     print(f"\nRegressions (persona normal falling more than {tolerance:g} from the previous step):")
     if not regressions:

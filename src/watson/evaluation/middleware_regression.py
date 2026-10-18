@@ -139,6 +139,7 @@ class TurnRecord(BaseModel):
     rejected_replies: str = ""  # replies that failed validation, with their OVS, separated by blank lines
     source: str
     reply: str
+    removed_from_reply: str = ""  # stage directions the Response Generation Layer cut from the reply, "; "-separated
     persona_score: int | None
     persona_reasoning: str
     narrative_score: int | None = None
@@ -174,6 +175,7 @@ class StepSummary(BaseModel):
     narrative_normal: float | None = None  # mean narrative score of generated replies to normal and rushing turns
     repetition: float | None = None  # mean repetition of all generated replies
     fallbacks: int = 0  # turns where every reply failed validation and the fallback was shown
+    directions_removed: int = 0  # replies shown with stage directions cut out
 
 
 class StepRegression(BaseModel):
@@ -315,6 +317,7 @@ def run_step(
                 **_validation_fields(result.validation),
                 source=result.source,
                 reply=result.reply,
+                removed_from_reply="; ".join(result.removed_from_reply),
                 persona_score=persona.score if persona else None,
                 persona_reasoning=persona.reasoning if persona else "",
                 narrative_score=narrative.score if narrative else None,
@@ -496,6 +499,7 @@ def summarize_step(step_index: int, name: str, records: list[TurnRecord]) -> Ste
         narrative_normal=average([r.narrative_score for r in normal]),
         repetition=average([r.repetition for r in records]),
         fallbacks=sum(r.source == "fallback_message" for r in records),
+        directions_removed=sum(bool(r.removed_from_reply) for r in records),
     )
 
 

@@ -215,21 +215,35 @@ def test_when_every_reply_fails_the_fallback_is_shown_scored_and_counted():
 
 class StageDirectionGemma(FakeGemma):
     def _generate(self, prompt: str, **kwargs) -> str:
+        return f"(Holmes leans forward)\n\n{super()._generate(prompt, **kwargs)}"
+
+
+def test_stage_directions_are_cut_from_replies_and_recorded():
+    records = run(4, gemma=StageDirectionGemma())
+    summary = summarize_step(4, "guided", records)
+
+    reached = [r for r in records if r.reached_holmes]
+    assert all(r.reply == "Elementary." and r.removed_from_reply == "(Holmes leans forward)" for r in reached)
+    assert summary.directions_removed == len(reached)
+    assert all(r.removed_from_reply == "" for r in records if not r.reached_holmes)
+
+
+class ModernTermGemma(FakeGemma):
+    def _generate(self, prompt: str, **kwargs) -> str:
         reply = super()._generate(prompt, **kwargs)
-        return f"(Holmes leans forward)\n\n{reply}" if kwargs["seed"] < 1000 else reply
+        return f"{reply}\n\nHave you seen the footage?" if kwargs["seed"] < 1000 else reply
 
 
 def test_output_validation_step_records_what_the_safety_filter_flagged():
-    records = run(5, gemma=StageDirectionGemma())
+    records = run(5, gemma=ModernTermGemma())
     [summary] = summarize_output_validation(records)
 
     first = next(r for r in records if r.reached_holmes)
-    assert first.filter_flags == 'stage direction "(Holmes leans forward)"'
-    assert first.ovs_first_scores == "PCC 9, NC 9, HWB 10, SS 2"  # the judge passed it; the filter capped SS
+    assert first.filter_flags == 'modern term "footage"'
+    assert first.ovs_first_scores == "PCC 9, NC 9, HWB 2, SS 8"  # the judge passed it; the filter capped HWB
     # The rejected reply's blank line is joined, so it stays one entry in the report.
     assert first.rejected_replies == (
-        'OVS 8.50 (PCC 9, NC 9, HWB 10, SS 2) [filter: stage direction "(Holmes leans forward)"]: '
-        "(Holmes leans forward) Elementary."
+        'OVS 7.50 (PCC 9, NC 9, HWB 2, SS 8) [filter: modern term "footage"]: Elementary. Have you seen the footage?'
     )
     assert first.reply == "Quite so. The mud by the window tells us much."
     assert summary.filtered_first == summary.turns

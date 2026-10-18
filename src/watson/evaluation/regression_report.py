@@ -75,8 +75,9 @@ def render_report(
         "## Results by step",
         "",
         "| Step | Name | Prompt | Components enabled | Persona (normal turns) | Persona (drift turns) "
-        "| Narrative (normal turns) | Repetition | Drift caught | Normal blocked | Fallbacks | Avg time per turn |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Narrative (normal turns) | Repetition | Drift caught | Normal blocked | Fallbacks | Stage directions removed "
+        "| Avg time per turn |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     steps = {summary.step: config.steps[summary.step - 1] for summary in summaries}
     for summary in summaries:
@@ -87,7 +88,7 @@ def render_report(
             f"| {_score(summary.persona_normal)} | {_score(summary.persona_drift)} "
             f"| {_score(summary.narrative_normal)} | {_score(summary.repetition)} "
             f"| {summary.drift_caught}/{summary.drift_total} | {summary.normal_blocked}/{summary.normal_total} "
-            f"| {summary.fallbacks} | {summary.mean_latency_ms / 1000:.1f} s |"
+           f"| {summary.fallbacks} | {summary.directions_removed} | {summary.mean_latency_ms / 1000:.1f} s |"
         )
     lines += [
         "",
@@ -100,6 +101,8 @@ def render_report(
         "- **Drift caught:** drift-inducing turns the middleware redirected or rejected.",
         "- **Normal blocked:** normal turns the middleware wrongly redirected or rejected.",
         "- **Fallbacks:** turns where every reply failed output validation, so the fallback reply was shown.",
+        "- **Stage directions removed:** replies shown after the Response Generation Layer cut out text describing "
+        "Holmes' actions, such as \"(Holmes leans forward)\".",
         "",
     ]
     if input_checks:
@@ -255,6 +258,8 @@ def _turn(record: TurnRecord) -> list[str]:
         # Shows why a turn was not accepted, to guide refinement of the Input Constraint Engine.
         lines += [f"_Input check: {record.input_check_reasons}._", ""]
         lines += [f"- {line}" for line in record.wics_reasoning.splitlines()] + [""]
+    if record.removed_from_reply:
+        lines += [f"_Removed from the reply: {record.removed_from_reply}._", ""]
     if record.guidance:
         lines += [f"_Guidance added: {record.guidance}._", ""]
     if record.rejected_replies:

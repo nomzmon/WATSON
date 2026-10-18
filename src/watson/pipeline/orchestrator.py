@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from watson.common.schemas import ComponentLatency, DecisionResult, DecisionType, RubricScore
 from watson.common.utils import timer
@@ -34,6 +34,7 @@ class TurnResult(BaseModel):
     decision: DecisionResult | None = None
     flow: FlowResult | None = None
     validation: ValidationResult | None = None
+    removed_from_reply: list[str] = Field(default_factory=list)  # stage directions cut from the reply shown
     latencies: list[ComponentLatency]
 
 
@@ -97,13 +98,14 @@ class Pipeline:
 
         if not self.output_validation:
             with timer() as elapsed:
-                reply = self.generator.generate(self.builder.render(guided), **generation_options).text
+                generated = self.generator.generate(self.builder.render(guided), **generation_options)
             latencies.append(ComponentLatency(component="generation", ms=elapsed()))
-            session.add_exchange(user_message, reply)
-            return TurnResult(user_message=user_message, reply=reply, source="generator",
-                              wics=wics, decision=decision, flow=flow, latencies=latencies)
+            session.add_exchange(user_message, generated.text)
+            return TurnResult(user_message=user_message, reply=generated.text, source="generator", wics=wics,
+                              decision=decision, flow=flow, removed_from_reply=generated.removed, latencies=latencies)
 
         generation_ms = 0.0
+        removed: dict[int, list[str]] = {}  # stage directions cut from each attempt's reply
 
         def generate(candidate: StructuredPrompt, attempt: int) -> str:
             nonlocal generation_ms
@@ -111,9 +113,10 @@ class Pipeline:
             if "seed" in options:
                 options["seed"] += 1000 * attempt  # a retry with the same seed could repeat the rejected reply
             with timer() as elapsed:
-                text = self.generator.generate(self.builder.render(candidate), **options).text
+                generated = self.generator.generate(self.builder.render(candidate), **options)
             generation_ms += elapsed()
-            return text
+            removed[attempt] = generated.removed
+            return generated.text
 
         with timer() as elapsed:
             validation = self.output_validation.run(guided.model_copy(update={"constraints": prompt.constraints}),
@@ -121,6 +124,8 @@ class Pipeline:
         latencies += [ComponentLatency(component="generation", ms=generation_ms),
                       ComponentLatency(component="output_validation", ms=elapsed() - generation_ms)]
         session.add_exchange(user_message, validation.reply)  # the fallback is in Holmes' voice, so it stays
+        shown = [] if validation.used_fallback else removed[len(validation.attempts) - 1]
         return TurnResult(user_message=user_message, reply=validation.reply,
                           source="fallback_message" if validation.used_fallback else "generator",
-                          wics=wics, decision=decision, flow=flow, validation=validation, latencies=latencies)
+                          wics=wics, decision=decision, flow=flow, validation=validation,
+                          removed_from_reply=shown, latencies=latencies)

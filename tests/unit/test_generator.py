@@ -57,6 +57,33 @@ def test_generate_strips_copied_name_label():
 def test_clean_response(raw, cleaned):
     assert clean_response(raw) == cleaned
 
+@pytest.mark.parametrize(
+    ("raw", "cleaned", "removed"),
+    [
+        # Replies from regression runs 5 and 6 that failed validation only because of the stage direction.
+        ('"The question is pertinent."\n\n(Holmes leans forward, eyes narrowing) "We will examine the staff."',
+         "The question is pertinent.\n\nWe will examine the staff.", ["(Holmes leans forward, eyes narrowing)"]),
+        ('"Good evening, sir. Do tell me precisely what happened."\n\n(Holmes leans forward, his eyes narrowing)',
+         "Good evening, sir. Do tell me precisely what happened.", ["(Holmes leans forward, his eyes narrowing)"]),
+        ("*leans back in his chair* The mud is telling.", "The mud is telling.", ["*leans back in his chair*"]),
+        ("[He lights his pipe.] Go on.", "Go on.", ["[He lights his pipe.]"]),
+        ("The mud is telling (as I suspected), and the window was forced.",
+         "The mud is telling (as I suspected), and the window was forced.", []),  # Holmes' own aside stays
+        ("You must *see*, not merely look.", "You must *see*, not merely look.", []),  # one-word emphasis stays
+        ("(Holmes leans forward)", "(Holmes leans forward)", []),  # nothing would be left, so validation decides
+    ],
+)
+def test_generate_cuts_stage_directions(raw, cleaned, removed):
+    reply = ResponseGenerator(FakeGemma(raw)).generate("x")
+
+    assert (reply.text, reply.removed) == (cleaned, removed)
+
+
+def test_a_single_unclosed_opening_quote_is_dropped():
+    assert clean_response('"Indeed, the gardener\'s dismissal raises suspicion.') == (
+        "Indeed, the gardener's dismissal raises suspicion."
+    )
+
 
 def test_from_config_applies_generator_yaml():
     generator = ResponseGenerator.from_config(Settings(generator_model="gemma:7b-instruct-q4_0"))

@@ -50,7 +50,7 @@ GUIDED = dict(
 VALIDATED = dict(
     GUIDED, ovs_total=8.8, ovs_pcc=9, ovs_nc=9, ovs_hwb=9, ovs_ss=6, ovs_first=6.3,
     ovs_first_scores="PCC 7, NC 5, HWB 9, SS 2", ovs_attempts=2,
-    filter_flags='stage direction "(Holmes leans forward)"',
+    filter_flags='stage direction "(Holmes leans forward)"', removed_from_reply="(Holmes gestures to a chair)",
     rejected_replies=('OVS 6.30 (PCC 7, NC 5, HWB 9, SS 2) [filter: stage direction "(Holmes leans forward)"]: '
                       "(Holmes leans forward) The butler did it."),
 )
@@ -78,10 +78,10 @@ def test_report_records_how_the_run_was_made():
 def test_report_has_a_row_per_step_with_its_components():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
 
-    assert "| 1 | persona prompt only | baseline_persona | none | - | 3.00 | - | - | 0/1 | 0/0 | 0 | 2.0 s |" in report
+    assert "| 1 | persona prompt only | baseline_persona | none | - | 3.00 | - | - | 0/1 | 0/0 | 0 | 0 | 2.0 s |" in report
     assert "| 2 | + input constraint and decision layer | baseline_persona | input constraint, decision layer |" in report
     assert ("| 4 | + dialogue flow manager | structured_prompt | input constraint, dialogue flow, decision layer "
-            "| 8.00 | - | 5.00 | 0.25 | 0/0 | 0/1 | 0 | 2.0 s |") in report
+            "| 8.00 | - | 5.00 | 0.25 | 0/0 | 0/1 | 0 | 0 | 2.0 s |") in report
 
 
 def test_report_lists_regressions_or_says_there_were_none():
@@ -158,6 +158,11 @@ def test_report_shows_each_turn_s_validation_and_rejected_replies():
     assert ('_Rejected by output validation:_\n\n- OVS 6.30 (PCC 7, NC 5, HWB 9, SS 2) '
             '[filter: stage direction "(Holmes leans forward)"]: (Holmes leans forward)') in report
 
+def test_report_counts_and_shows_removed_stage_directions():
+    report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
+
+    assert "| 0/0 | 0/1 | 0 | 1 | 2.0 s |" in report  # step 5: no fallback, one reply with a direction removed
+    assert "_Removed from the reply: (Holmes gestures to a chair)._" in report
 
 def test_report_leaves_out_the_output_validation_table_without_the_engine():
     assert "## Output validation" not in render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
