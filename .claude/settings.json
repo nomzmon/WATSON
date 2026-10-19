@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "ecc": {
+      "source": { "source": "git", "url": "https://github.com/affaan-m/ECC.git" }
+    },
+    "anthropic-agent-skills": {
+      "source": { "source": "github", "repo": "anthropics/skills" }
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "ecc@ecc": true,
+    "document-skills@anthropic-agent-skills": true
+  }
+}
