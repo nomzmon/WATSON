@@ -237,6 +237,13 @@ def test_filter_catches_the_problems_the_judge_missed_in_run_5():
         ("Have you checked the CCTV?", "modern term"),
         ("Send it by e-mail.", "modern term"),
         ("No computers were involved.", "modern term"),
+        # From regression runs 6 and 7: first-person narration and the visitor's line written by Holmes.
+        ('"Good evening, sir," I replied, my voice as dry as a bone. "What brings you here?"', "narration"),
+        ('"Indeed," said I. "Most curious."', "narration"),
+        ("The visitor's voice was low and urgent.", "narration"),
+        ("We must tread cautiously, my dear Watson, and gather further evidence.", "calls the visitor Watson"),
+        ("Well, Watson, the footprints lead us outside the study.", "calls the visitor Watson"),
+        ("Watson, fetch my coat.", "calls the visitor Watson"),
     ],
 )
 def test_filter_rules(reply, rule):
@@ -252,6 +259,9 @@ def test_filter_rules(reply, rule):
         "'The butler,' you say? Then we must see his boots.",  # single quotes and apostrophes
         "You must *see*, not merely look.",  # one-word emphasis
         '"The game is afoot," as I have said before.',
+        "As I said to the inspector, the mud is telling.",  # "I said" in Holmes' own speech
+        "My friend Watson is away in the country this week.",  # mentioning Watson is not calling the visitor Watson
+        'The butler told me, "I heard nothing," and I believe him.',
     ],
 )
 def test_filter_passes_ordinary_holmes_speech(reply):
@@ -288,3 +298,15 @@ def test_a_reply_the_judge_passes_is_retried_when_the_filter_flags_it():
     assert (first.passed, first.ovs.criteria["SS"].score, first.violations[0].rule) == (False, 2, "stage direction")
     assert {c.id: c.level for c in second.constraints} == {"P-VOICE": 2, "P-SPOKEN-ONLY": 2}
     assert (result.reply, second.passed, second.violations) == ("Pray, tell me precisely what happened.", True, [])
+    
+def test_calling_the_visitor_watson_strengthens_the_persona_constraints():
+    engine = OutputValidationEngine.from_config(ScriptedJudge(GOOD), PROFILE)
+    replies = iter(["We must tread cautiously, my dear Watson.", "We must tread cautiously, my dear fellow."])
+
+    result = engine.run(make_prompt(), [], lambda prompt, attempt: next(replies))
+
+    first, second = result.attempts
+    assert (first.passed, first.ovs.criteria["PCC"].score) == (False, 2)
+    assert first.violations[0].describe() == 'calls the visitor Watson "my dear Watson"'
+    assert second.constraints[[c.id for c in second.constraints].index("P-ADDRESS-VISITOR")].level == 2
+    assert result.reply == "We must tread cautiously, my dear fellow."

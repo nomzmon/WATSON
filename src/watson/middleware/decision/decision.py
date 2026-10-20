@@ -4,6 +4,10 @@ Two decisions are computed from a WICS result: one from the overall WICS and
 one from the lowest single criterion. The stricter of the two wins, so a high
 overall score cannot hide one critically low criterion. This also covers the
 cases Table 5.2 leaves open, e.g. all criteria at 7 (WICS 7.0) -> Rephrase.
+
+Optionally (`low_topic_relevance_redirects`), a message whose only criterion in
+the reject band is Topic Relevance is redirected instead: it is off-topic but
+keeps Holmes in his role and in the period, so the conversation can recover.
 """
 
 from __future__ import annotations
@@ -44,6 +48,7 @@ class BandThresholds(BaseModel):
 class DecisionThresholds(BaseModel):
     wics: BandThresholds
     lowest_criterion: BandThresholds
+    low_topic_relevance_redirects: bool = False
 
 
 def load_decision_thresholds(path: str | Path = "configs/rubrics/wics.yaml") -> DecisionThresholds:
@@ -54,11 +59,14 @@ def decide(wics: RubricScore, thresholds: DecisionThresholds) -> DecisionResult:
     by_wics = thresholds.wics.band(wics.weighted_total)
     lowest = min(wics.criteria.values(), key=lambda criterion: criterion.score)
     by_criterion = thresholds.lowest_criterion.band(lowest.score)
+    reasons = [
+        f"WICS {wics.weighted_total:g} is in the {by_wics.value} band",
+        f"lowest criterion {lowest.code}={lowest.score:g} is in the {by_criterion.value} band",
+    ]
+    rejected_by = [c.code for c in wics.criteria.values()
+                   if thresholds.lowest_criterion.band(c.score) == DecisionType.REJECT]
+    if thresholds.low_topic_relevance_redirects and rejected_by == ["TR"]:
+        by_criterion = DecisionType.REDIRECT
+        reasons.append("only TR is in the reject band, so the off-topic message is redirected")
     decision = max(by_wics, by_criterion, key=_SEVERITY.index)
-    return DecisionResult(
-        decision=decision,
-        reasons=[
-            f"WICS {wics.weighted_total:g} is in the {by_wics.value} band",
-            f"lowest criterion {lowest.code}={lowest.score:g} is in the {by_criterion.value} band",
-        ],
-    )
+    return DecisionResult(decision=decision, reasons=reasons)

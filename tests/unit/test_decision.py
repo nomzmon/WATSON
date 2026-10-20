@@ -57,7 +57,23 @@ def test_decision_explains_both_bands():
         "lowest criterion GIP=6 is in the rephrase band",
     ]
 
-
 def test_thresholds_must_be_in_descending_order():
     with pytest.raises(ValidationError):
         BandThresholds(accept=4.0, rephrase=6.0, redirect=8.0)
+        
+def test_off_topic_message_is_rejected_by_default_as_in_table_5_2():
+    # Run 7, dialogue 1 turn 4: "what is your opinion of the opera season this year?"
+    assert THRESHOLDS.low_topic_relevance_redirects is False
+    assert decide(make_wics(9, 1, 10, 9), THRESHOLDS).decision == DecisionType.REJECT
+
+
+def test_off_topic_message_can_be_redirected_when_only_tr_is_in_the_reject_band():
+    thresholds = THRESHOLDS.model_copy(update={"low_topic_relevance_redirects": True})
+
+    result = decide(make_wics(9, 1, 10, 9), thresholds)
+
+    assert result.decision == DecisionType.REDIRECT
+    assert "only TR is in the reject band" in result.reasons[-1]
+    assert decide(make_wics(1, 1, 1, 9), thresholds).decision == DecisionType.REJECT  # also breaks the persona
+    assert decide(make_wics(9, 1, 10, 2), thresholds).decision == DecisionType.REJECT  # also unclear (GIP 2)
+    assert decide(make_wics(9, 9, 1, 9), thresholds).decision == DecisionType.REJECT  # modern technology

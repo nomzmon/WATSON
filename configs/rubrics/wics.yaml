@@ -26,3 +26,9 @@ decision:
     accept: 7
     rephrase: 5
     redirect: 3
+  # DRAFT, for the group to decide. When the only criterion in the reject band
+  # is TR, the message is off-topic but keeps Holmes in his role and the period,
+  # so true redirects it instead of rejecting it. false follows Table 5.2 as
+  # written: any criterion at 2 or below rejects (runs 2-7: off-topic turns
+  # always got TR 1-2 and were never redirected).
+  low_topic_relevance_redirects: true

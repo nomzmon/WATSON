@@ -5,8 +5,10 @@ content outside Holmes' knowledge and behavioural boundaries that can be
 checked directly, without relying on the judge noticing it:
 
 - Style and Syntax: stage directions in brackets or asterisks, name labels,
-  narration such as "Holmes said", and quotation marks left open.
+  narration such as "Holmes said" or '"...," I replied', and quotation marks
+  left open.
 - Historical and World Boundary: modern terms from a list in the OVS config.
+- Persona Consistency: calling the visitor "Watson"; the visitor is a client.
 
 A flagged criterion is capped at a low score, so the reply fails validation
 and is regenerated with that criterion's constraints strengthened.
@@ -33,10 +35,18 @@ _NARRATION = re.compile(
     r"|\bHolmes\s+(?:said|says|replied|replies|asked|asks|continued|continues|added|adds|leans|leaned|nods|nodded"
     r"|smiles|smiled|gestures|gestured|pauses|paused|sighs|sighed)\b"
 )
+# A dialogue tag after quoted speech ('"...," I replied'), or the visitor's part narrated ("The visitor's voice").
+_DIALOGUE_TAG = re.compile(
+    r"[\"\u201d]\s*,?\s*(?:I|Holmes)\s+(?:said|replied|asked|answered|remarked|continued|added|exclaimed)\b"
+    r"|[\"\u201d]\s*,?\s*(?:said|replied|asked|answered|remarked|continued|added|exclaimed)\s+(?:I|Holmes)\b"
+    r"|\b[Tt]he visitor(?:'s voice|\s+(?:said|says|replied|asked|answered))\b"
+)
+# Holmes calling the visitor Watson: "my dear Watson", ", Watson," or a sentence opening with "Watson,".
+_CALLS_WATSON = re.compile(r"\b(?:[Mm]y\s+)?dear\s+Watson\b|,\s*Watson\s*[,.!?]|(?:^|[.!?]\s+)Watson\s*,", re.MULTILINE)
 
 
 class FilterViolation(BaseModel):
-    rule: str  # stage direction, name label, narration, open quotation or modern term
+    rule: str  # stage direction, name label, narration, open quotation, modern term or calls the visitor Watson
     criterion: str  # the OVS criterion it breaks
     evidence: str  # the text that broke it
 
@@ -76,6 +86,10 @@ class SafetyFilter:
             outside_directions = outside_directions.replace(direction, " ")
         violations += [FilterViolation(rule="narration", criterion="SS", evidence=m.group())
                        for m in _NARRATION.finditer(outside_directions)]
+        violations += [FilterViolation(rule="narration", criterion="SS", evidence=m.group().strip())
+                       for m in _DIALOGUE_TAG.finditer(outside_directions)]
+        violations += [FilterViolation(rule="calls the visitor Watson", criterion="PCC", evidence=m.group().strip())
+                       for m in _CALLS_WATSON.finditer(reply)]
         if open_quote := _open_quotation(reply):
             violations.append(FilterViolation(rule="open quotation", criterion="SS", evidence=open_quote))
         if self._modern:
