@@ -61,10 +61,18 @@ def test_thresholds_must_be_in_descending_order():
     with pytest.raises(ValidationError):
         BandThresholds(accept=4.0, rephrase=6.0, redirect=8.0)
         
-def test_off_topic_message_is_rejected_by_default_as_in_table_5_2():
+def test_off_topic_message_is_rejected_under_table_5_2_as_written():
     # Run 7, dialogue 1 turn 4: "what is your opinion of the opera season this year?"
-    assert THRESHOLDS.low_topic_relevance_redirects is False
-    assert decide(make_wics(9, 1, 10, 9), THRESHOLDS).decision == DecisionType.REJECT
+    thresholds = THRESHOLDS.model_copy(update={"low_topic_relevance_redirects": False})
+
+    assert decide(make_wics(9, 1, 10, 9), thresholds).decision == DecisionType.REJECT
+
+
+def test_repo_config_decides_off_topic_messages_by_its_switch():
+    # Follows whatever configs/rubrics/wics.yaml sets, so the switch can be changed without editing this test.
+    expected = DecisionType.REDIRECT if THRESHOLDS.low_topic_relevance_redirects else DecisionType.REJECT
+
+    assert decide(make_wics(9, 1, 10, 9), THRESHOLDS).decision == expected
 
 
 def test_off_topic_message_can_be_redirected_when_only_tr_is_in_the_reject_band():

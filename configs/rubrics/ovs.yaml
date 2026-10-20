@@ -34,7 +34,9 @@ fallback_message: >-
 #   narration such as "Holmes said", quotation marks left open.
 # - Historical and World Boundary: any of `modern_terms` (whole words, plural
 #   too, any capitalisation). Holmes should not use them even to dismiss them.
-# Set `enabled: false` to run validation with the judge alone.
+# - Persona Consistency (added after run 7): calling the visitor "Watson".
+# - Style and Syntax (added after run 7): dialogue tags such as '"...," I
+#   replied' and narrating the visitor ("The visitor's voice was low").
 safety_filter:
   enabled: true
   score_cap: 2
