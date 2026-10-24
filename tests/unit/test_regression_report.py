@@ -78,9 +78,12 @@ def test_report_records_how_the_run_was_made():
 def test_report_has_a_row_per_step_with_its_components():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
 
-    assert "| 1 | persona prompt only | baseline_persona | none | - | 3.00 | - | - | 0/1 | 0/0 | 0 | 0 | 2.0 s |" in report
-    assert "| 2 | + input constraint and decision layer | baseline_persona | input constraint, decision layer |" in report
-    assert ("| 4 | + dialogue flow manager | structured_prompt | input constraint, dialogue flow, decision layer "
+    assert ("| 1 | persona prompt only | baseline_persona | response generation "
+            "| - | 3.00 | - | - | 0/1 | 0/0 | 0 | 0 | 2.0 s |") in report
+    assert ("| 2 | + input constraint and decision layer | baseline_persona "
+            "| input constraint, decision layer, response generation |") in report
+    assert ("| 4 | + dialogue flow manager | structured_prompt "
+            "| input constraint, dialogue flow, decision layer, response generation "
             "| 8.00 | - | 5.00 | 0.25 | 0/0 | 0/1 | 0 | 0 | 2.0 s |") in report
 
 

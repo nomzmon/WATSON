@@ -33,9 +33,10 @@ class GeneratedReply(LLMResponse):
 
 
 class ResponseGenerator:
-    def __init__(self, client: LLMClient, stop: Sequence[str] = ()) -> None:
+    def __init__(self, client: LLMClient, stop: Sequence[str] = (), clean: bool = True) -> None:
         self.client = client
         self.stop = list(stop)
+        self.clean = clean
 
     @classmethod
     def from_config(
@@ -58,6 +59,8 @@ class ResponseGenerator:
         if self.stop:
             options = {"stop": self.stop, **options}
         response = self.client.generate(prompt, **options)
+        if not self.clean:
+            return GeneratedReply(**response.model_dump())
         text, removed = remove_stage_directions(response.text)
         return GeneratedReply(**response.model_dump(), removed=removed).model_copy(
             update={"text": clean_response(text)}

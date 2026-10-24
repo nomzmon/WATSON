@@ -1,6 +1,6 @@
-The four system configurations compared in evaluation.
-- c1_baseline.yaml         : persona prompting only, all middleware off
-- c2_input_constraint.yaml : baseline + Input Constraint Engine + Decision Layer
-- c3_dialogue_flow.yaml    : baseline + Dialogue Flow Manager
-- c4_watson_full.yaml      : all modules on
-Each file = module toggles + which rubric/model configs to load.
+The four system configurations compared in evaluation are the steps of
+configs/experiments/framework_validation.yaml:
+- C1: baseline persona prompting, all middleware off (Gemma's raw reply)
+- C2: + Input Constraint Engine and Decision Layer (with Prompt Builder and Response Generation Layer)
+- C3: + Dialogue Flow Manager (with Prompt Builder and Response Generation Layer)
+- C4: the complete WATSON framework

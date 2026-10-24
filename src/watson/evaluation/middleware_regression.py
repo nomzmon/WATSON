@@ -278,6 +278,7 @@ def build_pipeline(step: StepConfig, profile_path: str, generator: ResponseGener
         components["dialogue_flow"] = DialogueFlowManager.from_config(judge)
     if step.modules.output_validation:
         components["output_validation"] = OutputValidationEngine.from_config(judge, profile_path)
+    generator = ResponseGenerator(generator.client, generator.stop, clean=step.modules.response_generation)
     return Pipeline(builder, generator, **components)
 
 

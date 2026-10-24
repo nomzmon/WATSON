@@ -39,7 +39,13 @@ def test_generate_strips_copied_name_label():
     generator = ResponseGenerator(FakeGemma("  Holmes: The butler, of course.  "))
 
     assert generator.generate("x").text == "The butler, of course."
+    
+def test_without_clean_up_the_raw_reply_is_returned():
+    raw = "Holmes: (He leans forward) The butler, of course."
 
+    reply = ResponseGenerator(FakeGemma(raw), clean=False).generate("x")
+
+    assert (reply.text, reply.removed) == (raw, [])
 
 @pytest.mark.parametrize(
     ("raw", "cleaned"),

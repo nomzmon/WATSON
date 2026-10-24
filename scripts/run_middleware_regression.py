@@ -7,6 +7,8 @@ one before it. Needs Ollama running with GENERATOR_MODEL and JUDGE_MODEL set in 
 Usage (from the repo root):
     python scripts/run_middleware_regression.py              # every step
     python scripts/run_middleware_regression.py --steps 3 4  # only some steps
+    python scripts/run_middleware_regression.py --config configs/experiments/framework_validation.yaml
+    Runs and reports go to experiments/<config file name>/.
 """
 
 from __future__ import annotations
@@ -15,6 +17,7 @@ import argparse
 import csv
 import json
 from datetime import datetime
+from pathlib import Path
 
 from watson.common.config import get_settings, resolve_path
 from watson.evaluation.middleware_regression import (
@@ -61,7 +64,8 @@ def main() -> None:
     calls = sum(turns * (3 + step.modules.input_constraint + step.modules.dialogue_flow + step.modules.output_validation)
                 for step in steps.values())
     started = datetime.now()
-    out_dir = resolve_path(f"experiments/middleware_regression/runs/{started:%Y-%m-%d_%H%M}")
+    experiment = resolve_path(f"experiments/{Path(args.config).stem}")
+    out_dir = experiment / f"runs/{started:%Y-%m-%d_%H%M}"
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"Steps {', '.join(map(str, steps))} x {len(dialogues)} conversations ({turns} turns each step), "
           f"at least {calls} model calls: roughly {calls * SECONDS_PER_MODEL_CALL // 60} minutes or more.")
@@ -129,7 +133,7 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
-    report_path = resolve_path(f"experiments/middleware_regression/reports/{started:%Y-%m-%d_%H%M}_report.md")
+    report_path = experiment / f"reports/{started:%Y-%m-%d_%H%M}_report.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(
         render_report(details, config, dialogues, summaries, regressions, all_records, input_checks, flows,

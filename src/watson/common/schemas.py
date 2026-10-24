@@ -145,6 +145,8 @@ class ModuleToggles(BaseModel):
     dialogue_flow: bool = False
     output_validation: bool = False
     decision_layer: bool = False
+    # Response Generation Layer clean-up of Gemma's reply; off shows the raw reply (baseline configuration).
+    response_generation: bool = False
 
 
 class SystemConfiguration(BaseModel):

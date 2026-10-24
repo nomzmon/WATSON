@@ -99,7 +99,19 @@ def test_repo_config_adds_one_component_per_step():
         "baseline_persona.txt", "baseline_persona.txt", "structured_prompt.txt", "structured_prompt.txt",
         "structured_prompt.txt",
     ]
+    assert all(step.modules.response_generation for step in CONFIG.steps)
 
+def test_framework_validation_config_has_the_four_system_configurations():
+    steps = load_experiment_config("configs/experiments/framework_validation.yaml").steps
+    modules = [step.modules for step in steps]
+
+    assert [m.input_constraint and m.decision_layer for m in modules] == [False, True, False, True]
+    assert [m.dialogue_flow for m in modules] == [False, False, True, True]
+    assert [m.output_validation for m in modules] == [False, False, False, True]
+    assert [m.response_generation for m in modules] == [False, True, True, True]
+    assert [step.template.split("/")[-1] for step in steps] == [
+        "baseline_persona.txt", "structured_prompt.txt", "structured_prompt.txt", "structured_prompt.txt",
+    ]
 
 def test_repo_config_expects_a_decision_for_every_turn_kind():
     assert set(CONFIG.expected_decisions) == set(TurnKind)
@@ -228,6 +240,14 @@ def test_stage_directions_are_cut_from_replies_and_recorded():
     assert summary.directions_removed == len(reached)
     assert all(r.removed_from_reply == "" for r in records if not r.reached_holmes)
 
+def test_without_the_response_generation_layer_the_raw_reply_is_shown():
+    step = CONFIG.steps[0].model_copy(update={"modules": ModuleToggles()})
+    pipeline = build_pipeline(step, CONFIG.profile, ResponseGenerator(StageDirectionGemma()), FakeJudge())
+
+    records = run_step(1, step, pipeline, PersonaConsistencyJudge.from_config(FakeJudge(), CONFIG.profile),
+                       DIALOGUES, CONFIG.seed)
+
+    assert all(r.reply == "(Holmes leans forward)\n\nElementary." and r.removed_from_reply == "" for r in records)
 
 class ModernTermGemma(FakeGemma):
     def _generate(self, prompt: str, **kwargs) -> str:
