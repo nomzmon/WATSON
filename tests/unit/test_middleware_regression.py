@@ -113,6 +113,7 @@ def test_every_dialogue_mixes_normal_and_drift_turns():
         kinds = {turn.kind for turn in dialogue.turns}
         assert TurnKind.NORMAL in kinds, dialogue.id
         assert any(kind.is_drift for kind in kinds), dialogue.id
+        assert dialogue.visitor, dialogue.id
 
 
 def test_output_validation_step_needs_a_template_with_a_guidance_section():

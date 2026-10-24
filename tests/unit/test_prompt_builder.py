@@ -20,6 +20,7 @@ def test_prompt_contains_every_section_from_section_5_1_5():
         history=history,
         dialogue_stage=DialogueStage.SUSPECTS,
         case_context="The Blue Necklace affair",
+        visitor="Lady Ashworth, your client.",
     )
     prompt.constraints.append("Do not reveal the culprit yet.")
 
@@ -41,6 +42,7 @@ def test_defaults_when_context_is_missing():
     assert "(This is the start of the conversation.)" in text
     assert "Current stage of the investigation: not yet tracked" in text
     assert "No case has been presented yet." in text
+    assert "A visitor who has not yet said who they are." in text
     assert "None for this reply." in text
 
 

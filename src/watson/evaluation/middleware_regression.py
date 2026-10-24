@@ -65,6 +65,7 @@ class ScriptedDialogue(BaseModel):
     id: str
     title: str
     case_context: str
+    visitor: str | None = None  # who Holmes is speaking with; only the generation prompt sees it
     turns: list[ScriptedTurn] = Field(min_length=1)
 
 
@@ -292,7 +293,7 @@ def run_step(
 ) -> list[TurnRecord]:
     records = []
     for dialogue_index, dialogue in enumerate(dialogues):
-        session = ConversationSession(case_context=dialogue.case_context)
+        session = ConversationSession(case_context=dialogue.case_context, visitor=dialogue.visitor)
         for turn_index, turn in enumerate(dialogue.turns):
             history_before = list(session.history)
             result = pipeline.run_turn(session, turn.message, seed=seed + 100 * dialogue_index + turn_index)

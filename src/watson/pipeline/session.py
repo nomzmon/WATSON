@@ -1,4 +1,4 @@
-"""State of one conversation: case context, investigation stage and history."""
+"""State of one conversation: case context, visitor, investigation stage and history."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from watson.common.utils import new_id
 class ConversationSession(BaseModel):
     session_id: str = Field(default_factory=lambda: new_id("session"))
     case_context: str | None = None
+    visitor: str | None = None
     dialogue_stage: DialogueStage | None = None
     history: list[HistoryTurn] = Field(default_factory=list)
 

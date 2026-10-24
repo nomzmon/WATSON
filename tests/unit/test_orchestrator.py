@@ -65,6 +65,14 @@ def test_without_input_constraint_every_message_reaches_the_generator():
     assert [t.text for t in session.history] == ["What of the footprints?", "Elementary."]
     assert [latency.component for latency in result.latencies] == ["generation"]
 
+def test_the_session_visitor_reaches_the_generation_prompt():
+    gemma = FakeGemma()
+    builder = PromptBuilder.from_config(profile_path=PROFILE, template_path="prompts/generation/structured_prompt.txt")
+    session = ConversationSession(case_context="The pearl necklace affair", visitor="Lady Ashworth, your client.")
+
+    Pipeline(builder, ResponseGenerator(gemma)).run_turn(session, "What of the footprints?")
+
+    assert "Lady Ashworth, your client." in gemma.calls[0]["prompt"]
 
 def test_accepted_message_is_scored_then_generated():
     gemma = FakeGemma()

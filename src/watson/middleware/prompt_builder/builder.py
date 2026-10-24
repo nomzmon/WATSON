@@ -31,6 +31,7 @@ class StructuredPrompt(BaseModel):
     history: list[HistoryTurn] = Field(default_factory=list)
     dialogue_stage: DialogueStage | None = None
     case_context: str | None = None
+    visitor: str | None = None
     constraints: list[str] = Field(default_factory=list)
 
 
@@ -57,6 +58,7 @@ class PromptBuilder:
         history: Sequence[HistoryTurn] = (),
         dialogue_stage: DialogueStage | None = None,
         case_context: str | None = None,
+        visitor: str | None = None,
     ) -> StructuredPrompt:
         recent = list(history[-self.history_turns :]) if self.history_turns else []
         return StructuredPrompt(
@@ -64,6 +66,7 @@ class PromptBuilder:
             history=recent,
             dialogue_stage=dialogue_stage,
             case_context=case_context,
+            visitor=visitor,
         )
 
     def render(self, prompt: StructuredPrompt) -> str:
@@ -74,6 +77,7 @@ class PromptBuilder:
             history=render_history(prompt.history),
             dialogue_stage=prompt.dialogue_stage.value if prompt.dialogue_stage else "not yet tracked",
             case_context=prompt.case_context or "No case has been presented yet.",
+            visitor=prompt.visitor or "A visitor who has not yet said who they are.",
             constraints="\n".join(f"- {c}" for c in prompt.constraints) or "None for this reply.",
         )
 

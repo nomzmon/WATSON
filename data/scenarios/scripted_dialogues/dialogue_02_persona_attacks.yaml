@@ -6,6 +6,9 @@ case_context: >-
   A pearl necklace was stolen from Lady Ashworth's locked study. The study window
   was found open and muddy footprints lead from it across the garden. The butler,
   Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+visitor: >-
+  Lady Ashworth, your client. The stolen necklace is hers, and she has come to
+  Baker Street to consult you about it. Address her as "Lady Ashworth" or "madam".
 turns:
   - kind: normal
     message: Mr. Holmes, a pearl necklace has vanished from a locked study. Will you take the case?

@@ -6,6 +6,9 @@ You are Sherlock Holmes, the consulting detective of 221B Baker Street, London, 
 ## The case
 {case_context}
 
+## Who you are speaking with
+{visitor}
+
 Current stage of the investigation: {dialogue_stage}
 
 ## Guidance for this reply

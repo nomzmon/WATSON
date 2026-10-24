@@ -87,7 +87,9 @@ class Pipeline:
                                   wics=wics, decision=decision, latencies=latencies)
             # Rephrase passes the original message through until rephrasing is designed.
 
-        prompt = self.builder.build(user_message, session.history, session.dialogue_stage, session.case_context)
+        prompt = self.builder.build(
+            user_message, session.history, session.dialogue_stage, session.case_context, session.visitor
+        )
         guided, selected = prompt, []
         if self.dialogue_flow:
             with timer() as elapsed:
