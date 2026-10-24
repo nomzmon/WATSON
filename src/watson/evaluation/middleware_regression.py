@@ -295,9 +295,14 @@ def run_step(
     records = []
     for dialogue_index, dialogue in enumerate(dialogues):
         session = ConversationSession(case_context=dialogue.case_context, visitor=dialogue.visitor)
+        # The whole conversation runs before it is judged, so the judge model does not push the generator out of
+        # GPU memory between turns and the recorded latency is what a visitor would wait.
+        played = []
         for turn_index, turn in enumerate(dialogue.turns):
             history_before = list(session.history)
             result = pipeline.run_turn(session, turn.message, seed=seed + 100 * dialogue_index + turn_index)
+            played.append((turn_index, turn, history_before, result))
+        for turn_index, turn, history_before, result in played:
             generated = result.source in ("generator", "fallback_message")  # replies in Holmes' voice
             persona = persona_judge.score(history_before, turn.message, result.reply) if generated else None
             narrative = (

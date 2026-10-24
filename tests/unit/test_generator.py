@@ -95,5 +95,5 @@ def test_from_config_applies_generator_yaml():
     generator = ResponseGenerator.from_config(Settings(generator_model="gemma:7b-instruct-q4_0"))
 
     assert generator.client.model_name == "gemma:7b-instruct-q4_0"
-    assert generator.client.default_options == {"temperature": 0.7, "num_predict": 400, "num_ctx": 8192}
+    assert generator.client.default_options == {"temperature": 0.7, "num_predict": 400, "num_ctx": 4096}
     assert generator.stop == ["Visitor:"]

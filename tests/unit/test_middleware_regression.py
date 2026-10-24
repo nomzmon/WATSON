@@ -286,6 +286,19 @@ def test_each_step_replays_turns_with_the_same_seeds():
     assert set(guarded.seeds) < set(baseline.seeds)
     assert len(set(baseline.seeds)) == len(baseline.seeds)
 
+def test_each_conversation_is_judged_after_all_its_replies_are_generated():
+    gemma = FakeGemma()
+    replies_before_each_judge_call = []
+
+    class CountingJudge(FakeJudge):
+        def _generate(self, prompt: str, **kwargs) -> str:
+            replies_before_each_judge_call.append(len(gemma.seeds))
+            return super()._generate(prompt, **kwargs)
+
+    run(1, gemma=gemma, judge=CountingJudge())  # in step 1 the judge only scores replies
+
+    first = len(DIALOGUES[0].turns)
+    assert set(replies_before_each_judge_call[: 2 * first]) == {first}  # persona and narrative score per turn
 
 def test_persona_judge_sees_the_profile_history_and_reply():
     judge = FakeJudge()

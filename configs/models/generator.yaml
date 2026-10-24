@@ -3,9 +3,13 @@
 
 temperature: 0.7
 max_tokens: 400
-# Gemma-7B supports 8192 tokens. Ollama's default is smaller and silently cuts
-# off the start of longer prompts, which is where the persona profile sits.
-context_window: 8192
+# Gemma-7B supports 8192 tokens, but each token of context takes about 0.46 MB
+# of GPU memory, so 8192 needs about 3.5 GB on top of the 5 GB model and part of
+# Gemma then runs on the CPU of a 6-8 GB GPU. The longest prompt is about 1,900
+# tokens plus a 400-token reply, so 4096 is enough. Ollama silently cuts off the
+# start of a prompt that does not fit, which is where the persona profile sits:
+# check the prompt length again when the real persona profile arrives.
+context_window: 4096
 timeout: 180
 # Stop if the model starts writing the visitor's next line itself.
 stop: ["Visitor:"]
