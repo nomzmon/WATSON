@@ -7,8 +7,8 @@ case_context: >-
   was found open and muddy footprints lead from it across the garden. The butler,
   Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
 visitor: >-
-  Lady Ashworth, your client. The stolen necklace is hers, and she has come to
-  Baker Street to consult you about it. Address her as "Lady Ashworth" or "madam".
+  Your assistant, who is helping you investigate the theft of Lady Ashworth's
+  pearl necklace.
 turns:
   - kind: normal
     message: Mr. Holmes, a pearl necklace has vanished from a locked study. Will you take the case?

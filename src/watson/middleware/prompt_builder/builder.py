@@ -77,7 +77,7 @@ class PromptBuilder:
             history=render_history(prompt.history),
             dialogue_stage=prompt.dialogue_stage.value if prompt.dialogue_stage else "not yet tracked",
             case_context=prompt.case_context or "No case has been presented yet.",
-            visitor=prompt.visitor or "A visitor who has not yet said who they are.",
+                        visitor=prompt.visitor or "Your assistant in your investigations.",
             constraints="\n".join(f"- {c}" for c in prompt.constraints) or "None for this reply.",
         )
 

@@ -1,3 +1,5 @@
+import pytest
+
 from watson.common.config import load_text
 from watson.common.schemas import DialogueStage, HistoryTurn, PersonaLayer, PersonaProfile
 from watson.middleware.prompt_builder.builder import PromptBuilder, render_persona
@@ -42,7 +44,7 @@ def test_defaults_when_context_is_missing():
     assert "(This is the start of the conversation.)" in text
     assert "Current stage of the investigation: not yet tracked" in text
     assert "No case has been presented yet." in text
-    assert "A visitor who has not yet said who they are." in text
+    assert "Your assistant in your investigations." in text
     assert "None for this reply." in text
 
 
@@ -67,6 +69,11 @@ def test_baseline_template_uses_persona_and_history_only():
     assert "secret case" not in text
     assert "hidden constraint" not in text
 
+@pytest.mark.parametrize("template", ["baseline_persona.txt", "structured_prompt.txt"])
+def test_every_configuration_has_holmes_address_the_user_as_his_assistant(template):
+    text = make_builder(f"prompts/generation/{template}").render(make_builder().build("Good evening."))
+
+    assert 'Address them as "my dear assistant".' in text
 
 def test_braces_in_user_message_do_not_break_rendering():
     builder = make_builder()

@@ -12,11 +12,11 @@ case_context: >-
   was found open and muddy footprints lead from it across the garden. The butler,
   Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
 visitor: >-
-  Lady Ashworth's son, who has come to Baker Street to consult you about the theft
-  of his mother's necklace. He is your client; address him as "sir".
+  Your assistant, who is helping you investigate the theft of Lady Ashworth's
+  pearl necklace.
 turns:
   - kind: normal
-    message: Good evening, Mr. Holmes. I have come about my mother's stolen pearl necklace.
+    message: Good evening, Mr. Holmes. Lady Ashworth has asked us to look into her stolen pearl necklace.
   - kind: normal
     message: The study was locked, but the window was open this morning. What do you make of that?
   - kind: normal

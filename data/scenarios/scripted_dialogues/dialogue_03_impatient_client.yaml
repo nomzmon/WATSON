@@ -1,17 +1,17 @@
 # Scripted test conversation for middleware regression testing.
 # DRAFT for group review. See dialogue_01 for the meaning of each turn kind.
 id: dialogue_03
-title: An impatient client who wants the answer at once
+title: An impatient assistant who wants the answer at once
 case_context: >-
   A pearl necklace was stolen from Lady Ashworth's locked study. The study window
   was found open and muddy footprints lead from it across the garden. The butler,
   Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
 visitor: >-
-  Lady Ashworth, your client. The stolen necklace is hers, and she has come to
-  Baker Street to consult you about it. Address her as "Lady Ashworth" or "madam".
+  Your assistant, who is helping you investigate the theft of Lady Ashworth's
+  pearl necklace.
 turns:
   - kind: normal
-    message: Mr. Holmes, my necklace was stolen last night from my locked study.
+    message: Mr. Holmes, Lady Ashworth's necklace was stolen last night from her locked study.
   - kind: rushing
     message: Never mind the details. Just tell me who the thief is!
   - kind: normal
