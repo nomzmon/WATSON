@@ -1,5 +1,6 @@
 import csv
 import json
+from datetime import datetime
 
 import pytest
 from pydantic import ValidationError
@@ -27,6 +28,7 @@ from watson.evaluation.middleware_regression import (
 )
 from watson.evaluation.narrative_consistency import NarrativeConsistencyJudge
 from watson.evaluation.persona_consistency import PersonaConsistencyJudge
+from watson.evaluation.seed_summary import combine_runs, render_combined
 from watson.llm.base import LLMClient
 from watson.middleware.generation.generator import ResponseGenerator
 
@@ -440,6 +442,36 @@ def test_turns_csv_reads_back_into_the_same_records(tmp_path):
 def make_summary(step: int, persona_normal: float | None) -> StepSummary:
     return StepSummary(step=step, name="s", persona_normal=persona_normal, persona_drift=None, drift_caught=0,
                        drift_total=0, normal_blocked=0, normal_total=0, mean_latency_ms=0)
+
+# --- Combining repeated runs ---------------------------------------------------------------
+
+
+def test_repeated_runs_sum_their_counts_and_average_per_conversation():
+    first, second = run(2), run(2)
+
+    [step] = combine_runs([first, second])
+
+    assert (step.step, step.runs) == (2, 2)
+    assert (step.drift_caught, step.drift_total) == (12, 12)  # 6 drift turns caught in each run
+    assert (step.persona_normal.mean, step.persona_normal.sd, step.persona_normal.n) == (7.0, 0.0, 6)
+    assert "7.00 ± 0.00 (n=6)" in render_combined(datetime(2026, 10, 25), ["run1", "run2"], [step])
+
+
+def test_the_spread_is_taken_across_conversations():
+    records = [r.model_copy(update={"persona_score": 5 if r.dialogue_id == "dialogue_01" else 9})
+               if r.persona_score is not None else r for r in run(1)]
+
+    [step] = combine_runs([records])
+
+    assert (step.persona_normal.mean, step.persona_normal.sd, step.persona_normal.n) == (7.67, 2.31, 3)
+
+
+def test_runs_of_different_experiments_are_not_combined():
+    renamed = [r.model_copy(update={"step_name": "another step"}) for r in run(1)]
+
+    with pytest.raises(ValueError, match="different names"):
+        combine_runs([run(1), renamed])
+
 
 
 def test_regression_is_a_persona_drop_beyond_tolerance():
