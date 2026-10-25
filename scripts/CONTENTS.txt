@@ -6,3 +6,5 @@ Command-line entry points.
 - run_weight_variance.py
 - analyze_results.py
 - setup_models.sh          : pull/serve local models
+- export_rating_sheet.py   : blind human rating sheet and answer key from a run
+- compare_ratings.py       : human ratings vs the judges, and between raters
