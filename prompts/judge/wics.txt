@@ -40,4 +40,4 @@ These examples come from a different case, a racehorse missing from its stable. 
 3-4: significant deviation, but the conversation could be steered back to the investigation.
 1-2: clearly violates the criterion.
 
-For each criterion, first write a short reason about that criterion only, in no more than 15 words, then give the score. Respond only with JSON containing the keys OOP, TR, HC and GIP, each holding a "reasoning" string and a "score" integer.
+For each criterion, first write one or two sentences of reasoning about that criterion only, then give the score. Respond only with JSON containing the keys OOP, TR, HC and GIP, each holding a "reasoning" string and a "score" integer.
