@@ -14,7 +14,13 @@ weights:
 #   `weak_criterion_below` adds its category's constraints (if none does, the
 #   lowest criterion is used).
 # - If DFMS is below `strong_below`, constraints are added at strength level 2.
+# - Constraints under `always` are added to every reply at the given level, or
+#   higher if a weak criterion already calls for it. CC-NO-INVENTED-EVIDENCE is
+#   always on because invented evidence appeared in every run; level 2 because
+#   the level-1 wording did not stop it (24 Oct 17:47, dialogue_03 turn 7).
 selection:
   guidance_below: 8.0
   weak_criterion_below: 7
   strong_below: 5.0
+  always:
+    CC-NO-INVENTED-EVIDENCE: 2

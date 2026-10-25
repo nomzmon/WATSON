@@ -3,7 +3,8 @@
 Each DFMS criterion maps to one constraint category. The current stage's
 dialogue-state constraint is always included. When the DFMS is low, the
 categories of the weak criteria are added, and a very low DFMS raises them to
-strength level 2. Level 3 is left for Output Validation's constraint refinement.
+strength level 2. Constraints the config lists under `always` are added to every
+reply. Level 3 is left for Output Validation's constraint refinement.
 """
 
 from __future__ import annotations
@@ -11,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from watson.common.config import load_yaml, resolve_path
 from watson.common.schemas import Constraint, ConstraintCategory, DialogueStage, RubricScore
@@ -28,6 +29,7 @@ class SelectionThresholds(BaseModel):
     guidance_below: float
     weak_criterion_below: float
     strong_below: float
+    always: dict[str, int] = Field(default_factory=dict)  # constraint id -> level added to every reply
 
 
 class SelectedConstraint(BaseModel):
@@ -85,4 +87,18 @@ def select_constraints(
             selected.append(
                 SelectedConstraint(id=constraint.id, category=category, level=applied, text=constraint.text_for(applied))
             )
+
+    unknown = set(thresholds.always) - {c.id for c in library.constraints}
+    if unknown:
+        raise ValueError(f"unknown constraint ids under 'always': {sorted(unknown)}")
+    for constraint in library.constraints:
+        if constraint.id not in thresholds.always or not constraint.applies_to(stage):
+            continue
+        level = min(thresholds.always[constraint.id], constraint.max_level)
+        current = next((s for s in selected if s.id == constraint.id), None)
+        if current is None:
+            selected.append(SelectedConstraint(id=constraint.id, category=constraint.category, level=level,
+                                               text=constraint.text_for(level)))
+        elif current.level < level:
+            current.level, current.text = level, constraint.text_for(level)
     return selected

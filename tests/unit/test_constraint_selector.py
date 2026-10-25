@@ -63,14 +63,18 @@ def test_duplicate_constraint_ids_are_rejected():
 # --- Selection rules ----------------------------------------------------------
 
 
-def test_healthy_flow_adds_only_the_stage_constraint():
-    assert selected(make_dfms(9, 9, 9, 8), DialogueStage.EVIDENCE) == {"DS-EVIDENCE": 1}
+def test_healthy_flow_adds_only_the_stage_constraint_and_the_always_on_ones():
+    result = selected(make_dfms(9, 9, 9, 8), DialogueStage.EVIDENCE)
+
+    assert result == {"DS-EVIDENCE": 1, "CC-NO-INVENTED-EVIDENCE": 2}
 
 
 def test_weak_criteria_add_their_categories():
     result = selected(make_dfms(9, 4, 9, 9), DialogueStage.EVIDENCE)  # DFMS 7.5, NP weak
 
-    assert result == {"DS-EVIDENCE": 1, "NP-ONE-STEP": 1, "NP-NO-PREMATURE-CONCLUSION": 1}
+    assert result == {
+        "DS-EVIDENCE": 1, "NP-ONE-STEP": 1, "NP-NO-PREMATURE-CONCLUSION": 1, "CC-NO-INVENTED-EVIDENCE": 2,
+    }
 
 
 def test_weak_state_tracking_firms_up_the_stage_constraint():
@@ -89,6 +93,26 @@ def test_very_low_dfms_applies_strength_level_2():
     assert set(result.values()) == {2}
     assert "TB-STAY-ON-CASE" in result
 
+def test_an_always_on_constraint_is_raised_to_its_level_when_its_category_is_weak():
+    result = selected(make_dfms(9, 9, 3, 9), DialogueStage.EVIDENCE)  # DFMS 7.8, CC weak at level 1
+
+    assert result["CC-REFER-BACK"] == 1
+    assert result["CC-NO-INVENTED-EVIDENCE"] == 2
+
+
+def test_an_always_on_constraint_never_lowers_a_level_the_dfms_asked_for():
+    thresholds = THRESHOLDS.model_copy(update={"always": {"CC-NO-INVENTED-EVIDENCE": 1}})
+
+    result = select_constraints(make_dfms(3, 4, 3, 5), DialogueStage.EVIDENCE, LIBRARY, thresholds)
+
+    assert {c.id: c.level for c in result}["CC-NO-INVENTED-EVIDENCE"] == 2
+
+
+def test_an_unknown_always_on_constraint_is_rejected():
+    thresholds = THRESHOLDS.model_copy(update={"always": {"CC-MISSPELLED": 2}})
+
+    with pytest.raises(ValueError, match="CC-MISSPELLED"):
+        select_constraints(make_dfms(9, 9, 9, 9), DialogueStage.EVIDENCE, LIBRARY, thresholds)
 
 def test_stage_limited_constraints_are_skipped_outside_their_stages():
     result = selected(make_dfms(9, 4, 9, 9), DialogueStage.DEDUCTION)

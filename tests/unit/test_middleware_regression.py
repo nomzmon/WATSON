@@ -376,6 +376,13 @@ def test_dialogue_flow_summary_gives_mean_dfms_guidance_and_final_stages():
     assert summary.final_stages["dialogue_01"] == DialogueStage.SUSPECTS  # never beyond the stage the judge proposes
     assert summary.proposed_stages == {DialogueStage.SUSPECTS: generated}
 
+def test_always_on_constraints_do_not_count_as_guidance():
+    records = [r.model_copy(update={"guidance": "DS-EVIDENCE (level 1), CC-NO-INVENTED-EVIDENCE (level 2)"})
+               for r in run(4)]
+
+    [summary] = summarize_dialogue_flow(records)
+
+    assert summary.guided_turns == 0
 
 def test_dialogue_flow_summary_is_empty_without_the_dialogue_flow_manager():
     assert summarize_dialogue_flow(run(2)) == []

@@ -171,8 +171,9 @@ def _flow_table(summaries: Sequence[FlowSummary]) -> list[str]:
         "## Dialogue flow",
         "",
         "Mean DFMS and criterion scores (1-10) given by the Dialogue Flow Manager before each reply, how many "
-        "replies it added guidance to beyond the stage constraint, the stages its judge proposed (the tracker "
-        "moves at most one stage per turn) and the stage each conversation ended at.",
+        "replies it added guidance to beyond the stage constraint and the constraints added to every reply, the "
+        "stages its judge proposed (the tracker moves at most one stage per turn) and the stage each conversation "
+        "ended at.",
         "",
         f"| Step | Turns | DFMS | {' | '.join(DFMS_CRITERIA)} | Guided turns | Stages proposed | Final stages |",
         "|---" * (6 + len(DFMS_CRITERIA)) + "|",

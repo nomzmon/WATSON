@@ -76,7 +76,9 @@ def test_manager_adds_constraints_and_advances_stage():
     guided, result = manager.apply(make_prompt())
 
     assert result.stage == guided.dialogue_stage == DialogueStage.SUSPECTS
-    assert [c.id for c in result.constraints] == ["DS-SUSPECTS", "NP-ONE-STEP", "NP-NO-PREMATURE-CONCLUSION"]
+    assert [c.id for c in result.constraints] == [
+        "DS-SUSPECTS", "NP-ONE-STEP", "NP-NO-PREMATURE-CONCLUSION", "CC-NO-INVENTED-EVIDENCE",
+    ]
     assert guided.constraints == [c.text for c in result.constraints]
 
 

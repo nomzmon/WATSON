@@ -30,6 +30,7 @@ from watson.evaluation.persona_consistency import PersonaConsistencyJudge
 from watson.llm.base import LLMClient
 from watson.middleware.decision.decision import load_decision_thresholds
 from watson.middleware.decision.messages import DecisionMessages
+from watson.middleware.dialogue_flow.constraint_selector import load_selection_thresholds
 from watson.middleware.dialogue_flow.flow_evaluator import DFMS_CRITERIA
 from watson.middleware.dialogue_flow.manager import DialogueFlowManager, FlowResult
 from watson.middleware.generation.generator import ResponseGenerator
@@ -204,7 +205,7 @@ class FlowSummary(BaseModel):
     turns: int  # turns evaluated by the Dialogue Flow Manager
     dfms: float
     criteria: dict[str, float]  # mean score per DFMS criterion
-    guided_turns: int  # turns that received guidance beyond the stage constraint
+    guided_turns: int  # turns that received guidance beyond the constraints added to every reply
     final_stages: dict[str, DialogueStage]  # stage each dialogue ended at
     proposed_stages: dict[DialogueStage, int] = Field(default_factory=dict)  # how often the judge proposed each stage
 
@@ -443,6 +444,7 @@ def summarize_input_checks(
 def summarize_dialogue_flow(records: list[TurnRecord]) -> list[FlowSummary]:
     """Per step with the Dialogue Flow Manager: mean DFMS, how often it added guidance and the stages reached."""
     summaries = []
+    always = set(load_selection_thresholds().always)
     evaluated = [r for r in records if r.dfms_total is not None]
     for step in sorted({r.step for r in evaluated}):
         group = [r for r in evaluated if r.step == step]
@@ -451,8 +453,12 @@ def summarize_dialogue_flow(records: list[TurnRecord]) -> list[FlowSummary]:
             turns=len(group),
             dfms=round(mean(r.dfms_total for r in group), 2),
             criteria={code: round(mean(r.dfms_scores()[code] for r in group), 2) for code in DFMS_CRITERIA},
-            # The stage constraint (DS-...) is always added; anything else means the DFMS asked for guidance.
-            guided_turns=sum(any(not g.startswith("DS-") for g in r.guidance.split(", ") if g) for r in group),
+            # The stage constraint (DS-...) and the configured `always` constraints go into every reply; anything else
+            # means the DFMS asked for guidance.
+            guided_turns=sum(
+                any(not g.startswith("DS-") and g.split(" (")[0] not in always for g in r.guidance.split(", ") if g)
+                for r in group
+            ),
             final_stages={r.dialogue_id: r.stage for r in group},  # later turns overwrite earlier ones
             proposed_stages={
                 stage: count for stage in DialogueStage
