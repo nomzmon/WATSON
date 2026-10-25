@@ -14,6 +14,7 @@ from watson.middleware.output_validation.retry import OutputValidationEngine
 from watson.middleware.output_validation.safety_filter import FilterSettings, SafetyFilter
 from watson.middleware.output_validation.validator import (
     OutputValidator,
+    OVSJudgement,
     ValidationSettings,
     load_ovs_weights,
     load_validation_settings,
@@ -39,6 +40,18 @@ class ScriptedJudge(LLMClient):
         self.prompts.append(prompt)
         scores = self.scores.pop(0) if len(self.scores) > 1 else self.scores[0]
         return json.dumps({code: {"reasoning": f"{code} reasoning", "score": s} for code, s in scores.items()})
+
+class DetailJudge(ScriptedJudge):
+    """Like ScriptedJudge, but lists the given unsupported details on the first call only."""
+
+    def __init__(self, details: list[str], *scores: dict[str, int]) -> None:
+        super().__init__(*scores)
+        self.details = details
+
+    def _generate(self, prompt: str, **kwargs) -> str:
+        judgement = json.loads(super()._generate(prompt, **kwargs))
+        details, self.details = self.details, []
+        return json.dumps({"unsupported_details": details, **judgement})
 
 
 GOOD = {"PCC": 9, "NC": 9, "HWB": 10, "SS": 9}
@@ -99,6 +112,36 @@ def test_a_reply_passes_only_with_a_high_enough_ovs_and_no_very_low_criterion(sc
     ovs.weighted_total = sum(w * s for w, s in zip((0.4, 0.3, 0.2, 0.1), scores))
 
     assert passes(ovs, SETTINGS) is expected
+
+def test_unsupported_details_cap_narrative_coherence_and_fail_the_reply():
+    judge = DetailJudge(["the window latch was broken", "boots with a moderate amount of tread"], GOOD)
+
+    ovs = OutputValidator.from_config(judge, PROFILE).evaluate(make_prompt(), "The latch was broken.")
+
+    assert ovs.criteria["NC"].score == 3  # repo cap
+    assert "the window latch was broken; boots with a moderate amount of tread" in ovs.criteria["NC"].rationale
+    assert ovs.weighted_total == pytest.approx(0.40 * 9 + 0.30 * 3 + 0.20 * 10 + 0.10 * 9)
+    assert not passes(ovs, SETTINGS)
+
+
+def test_a_reply_without_unsupported_details_keeps_its_narrative_score():
+    ovs = OutputValidator.from_config(DetailJudge([], GOOD), PROFILE).evaluate(make_prompt(), "Elementary.")
+
+    assert ovs.criteria["NC"].score == 9
+
+
+def test_repo_prompt_asks_for_unsupported_details_before_the_scores():
+    prompt = OutputValidator.from_config(ScriptedJudge(GOOD), PROFILE).build_prompt(make_prompt(), "Elementary.")
+
+    assert 'First give the key "unsupported_details"' in prompt
+
+
+def test_the_judge_must_write_the_unsupported_details_list_first():
+    schema = OVSJudgement.model_json_schema()
+
+    assert list(schema["properties"])[0] == "unsupported_details"
+    assert "unsupported_details" in schema["required"]
+
 
 
 def test_repo_settings_allow_two_retries():
@@ -178,6 +221,11 @@ def test_a_failed_reply_is_regenerated_with_strengthened_constraints():
     assert retry_constraints["DS-EVIDENCE"] == 1  # the Dialogue Flow Manager's constraint is kept
     assert retry_constraints["CC-NO-INVENTED-EVIDENCE"] == 2
 
+def test_a_reply_with_invented_evidence_is_retried_with_the_continuity_rules_strengthened():
+    result, _ = run_loop(DetailJudge(["the window latch was broken"], GOOD))
+
+    assert (result.reply, [a.passed for a in result.attempts]) == ("reply 2", [False, True])
+    assert {c.id: c.level for c in result.attempts[1].constraints}["CC-NO-INVENTED-EVIDENCE"] == 2
 
 def test_the_fallback_is_returned_when_every_attempt_fails():
     result, seen = run_loop(ScriptedJudge(WEAK_NARRATIVE))
