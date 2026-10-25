@@ -4,8 +4,10 @@ import json
 import pytest
 from pydantic import ValidationError
 
+from watson.common.config import load_yaml
 from watson.common.schemas import DecisionType, DialogueStage, HistoryTurn, ModuleToggles
 from watson.evaluation.middleware_regression import (
+    ScriptedDialogue,
     StepConfig,
     StepSummary,
     TurnKind,
@@ -239,6 +241,22 @@ def test_stage_directions_are_cut_from_replies_and_recorded():
     assert all(r.reply == "Elementary." and r.removed_from_reply == "(Holmes leans forward)" for r in reached)
     assert summary.directions_removed == len(reached)
     assert all(r.removed_from_reply == "" for r in records if not r.reached_holmes)
+
+def test_held_out_config_runs_the_two_configurations_with_the_input_check():
+    framework = load_experiment_config("configs/experiments/framework_validation.yaml")
+    held_out = load_experiment_config("configs/experiments/held_out.yaml")
+
+    assert [(s.template, s.modules) for s in held_out.steps] == [
+        (s.template, s.modules) for s in (framework.steps[1], framework.steps[3])
+    ]
+    assert held_out.dialogues == "data/scenarios/held_out_dialogues"
+    assert held_out.expected_decisions == framework.expected_decisions
+
+
+def test_held_out_template_is_a_valid_dialogue_with_every_turn_kind():
+    template = ScriptedDialogue.model_validate(load_yaml("data/scenarios/held_out_dialogues/TEMPLATE.yaml.example"))
+
+    assert {turn.kind for turn in template.turns} == set(TurnKind)
 
 def test_without_the_response_generation_layer_the_raw_reply_is_shown():
     step = CONFIG.steps[0].model_copy(update={"modules": ModuleToggles()})

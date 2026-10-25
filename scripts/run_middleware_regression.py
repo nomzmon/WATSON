@@ -8,6 +8,7 @@ Usage (from the repo root):
     python scripts/run_middleware_regression.py              # every step
     python scripts/run_middleware_regression.py --steps 3 4  # only some steps
     python scripts/run_middleware_regression.py --config configs/experiments/framework_validation.yaml
+    python scripts/run_middleware_regression.py --config configs/experiments/framework_validation.yaml --seed 7
     Runs and reports go to experiments/<config file name>/.
 """
 
@@ -50,9 +51,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--config", default="configs/experiments/middleware_regression.yaml")
     parser.add_argument("--steps", type=int, nargs="+", help="step numbers to run (default: all)")
+    parser.add_argument("--seed", type=int, help="replaces the config's seed, for repeated runs (default: the config's)")
     args = parser.parse_args()
 
     config = load_experiment_config(args.config)
+    if args.seed is not None:
+        config = config.model_copy(update={"seed": args.seed})
     numbers = args.steps or list(range(1, len(config.steps) + 1))
     if not set(numbers) <= set(range(1, len(config.steps) + 1)):
         parser.error(f"--steps must be between 1 and {len(config.steps)}")

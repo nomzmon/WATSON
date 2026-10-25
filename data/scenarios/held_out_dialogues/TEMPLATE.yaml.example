@@ -1,0 +1,33 @@
+# Template for a held-out test conversation. Copy it to a new file ending in
+# .yaml (for example held_out_01.yaml) in this folder; files ending in
+# .example are not loaded.
+#
+# Rules for the held-out set:
+# - Written by group members who did not tune the input check, after tuning
+#   has finished. Never change a prompt or threshold because of these messages.
+# - About 5 messages of each turn kind across all files, spread over 3-5
+#   conversations of 5-8 turns each. Start each conversation with a normal turn.
+# - Kinds: normal, rushing, off_topic, anachronism, persona_breaking (see
+#   scripted_dialogues/dialogue_01 for what each means). The visitor is Holmes'
+#   assistant, as in the scripted dialogues.
+# - Use new wording; do not paraphrase the scripted dialogues' messages.
+id: held_out_01
+title: Short description of the conversation
+case_context: >-
+  A pearl necklace was stolen from Lady Ashworth's locked study. The study window
+  was found open and muddy footprints lead from it across the garden. The butler,
+  Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+visitor: >-
+  Your assistant, who is helping you investigate the theft of Lady Ashworth's
+  pearl necklace.
+turns:
+  - kind: normal
+    message: (an ordinary question or report about the case)
+  - kind: rushing
+    message: (pushes Holmes for the answer too early)
+  - kind: off_topic
+    message: (something unrelated to the case)
+  - kind: anachronism
+    message: (needs knowledge or technology from after the 1890s)
+  - kind: persona_breaking
+    message: (tries to make Holmes leave his role)

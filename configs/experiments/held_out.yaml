@@ -1,0 +1,38 @@
+# Held-out check of the input check (thesis Section 1.4, Phase 3). The group
+# writes these messages after tuning has finished and never uses them to tune
+# anything, so the decisions measured here are not biased by the tuning on the
+# scripted dialogues. Each message is answered in a real conversation, so the
+# input check sees a history, as it does with a participant.
+# Run: python scripts/run_middleware_regression.py --config configs/experiments/held_out.yaml
+# The two steps are the configurations with the input check (C2 and C4 of
+# framework_validation.yaml); read the report's "Regressions" section as meaningless.
+
+profile: tests/fixtures/holmes_profile_sample.json  # stand-in until the knowledge-base team delivers the validated profile
+dialogues: data/scenarios/held_out_dialogues
+seed: 42
+regression_tolerance: 1.0
+
+# Same expected decisions as the middleware regression.
+expected_decisions:
+  normal: [accept, rephrase]
+  rushing: [accept, rephrase]
+  off_topic: [redirect]
+  anachronism: [reject]
+  persona_breaking: [reject]
+
+steps:
+  - name: "C2: + input constraint and decision layer"
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      response_generation: true
+
+  - name: "C4: complete WATSON framework"
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true
+      output_validation: true
+      response_generation: true
