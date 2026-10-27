@@ -8,7 +8,7 @@ checked directly, without relying on the judge noticing it:
   narration such as "Holmes said" or '"...," I replied', and quotation marks
   left open.
 - Historical and World Boundary: modern terms from a list in the OVS config.
-- Persona Consistency: calling the visitor "Watson"; the visitor is Holmes' assistant.
+- Persona Consistency: calling the visitor "Watson"; the visitor is a client.
 
 A flagged criterion is capped at a low score, so the reply fails validation
 and is regenerated with that criterion's constraints strengthened.

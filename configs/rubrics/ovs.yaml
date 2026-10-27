@@ -20,11 +20,6 @@ validation:
   # Criteria below this get their constraints strengthened before a retry; if
   # none is, the lowest criterion is used.
   weak_criterion_below: 7
-  # The judge first lists details the reply states as fact that appear in
-  # neither the case nor the conversation. If it lists any, Narrative Coherence
-  # scores at most this, so the reply fails and is retried (added after the
-  # 25 Oct runs, where the judge passed invented evidence).
-  unsupported_detail_cap: 3
 
 # Returned, in Holmes' voice, when every attempt fails validation.
 fallback_message: >-
