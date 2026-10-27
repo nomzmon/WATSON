@@ -20,6 +20,14 @@ validation:
   # Criteria below this get their constraints strengthened before a retry; if
   # none is, the lowest criterion is used.
   weak_criterion_below: 7
+  # The judge first lists details the reply states as fact that appear in
+  # neither the case nor the conversation. If it lists any, Narrative Coherence
+  # scores at most this (added after the 25 Oct runs, where the judge passed
+  # invented evidence). Balanced version: at 5 the criterion still meets
+  # `min_criterion`, so a flagged reply passes only if the other criteria are
+  # strong enough to keep the OVS at 7; a cap of 3 (the quality version)
+  # fails every flagged reply and fell back on 10 of 12 turns.
+  unsupported_detail_cap: 5
 
 # Returned, in Holmes' voice, when every attempt fails validation.
 fallback_message: >-
