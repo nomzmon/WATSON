@@ -43,4 +43,7 @@ SS (Style and Syntax): Does the language read like Holmes speaking: his vocabula
 3-4: a significant problem; the reply should not be shown as it is.
 1-2: the reply clearly fails the criterion.
 
-For each criterion, first write one or two sentences of reasoning about that criterion only, then give the score. Respond only with JSON containing the keys PCC, NC, HWB and SS, each holding a "reasoning" string and a "score" integer.
+## Unsupported details
+Before scoring, list every detail the reply states as fact about the case that appears in neither the case description nor the conversation: physical evidence (for example a broken latch, a forced window or the size of the footprints), descriptions of the thief, names, places or events. Do not list questions, suggestions of what to examine next, possibilities Holmes clearly marks as uncertain, or deductions he draws from facts that are established.
+
+Respond only with JSON. First give the key "unsupported_details", a list of those details, each quoted briefly from the reply (an empty list if there are none). Then, for each criterion, first write one or two sentences of reasoning about that criterion only, then give the score: the keys PCC, NC, HWB and SS, each holding a "reasoning" string and a "score" integer.
