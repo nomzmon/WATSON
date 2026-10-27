@@ -1,3 +1,4 @@
 Instruments used for human evaluation.
 - questionnaires/ : SUS, perceived persona consistency, perceived wait time, open-ended feedback
 - annotation/     : human annotation guidelines and templates for labeling responses
+- long_conversation_test.txt : manual 30-turn test of C1-C4 in the chat page (steps, messages, what to watch)

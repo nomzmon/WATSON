@@ -1,7 +1,8 @@
 import csv
 import json
+import re
 from datetime import datetime
-
+from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
@@ -253,6 +254,28 @@ def test_held_out_config_runs_the_two_configurations_with_the_input_check():
     ]
     assert held_out.dialogues == "data/scenarios/held_out_dialogues"
     assert held_out.expected_decisions == framework.expected_decisions
+
+def test_long_conversation_config_runs_the_four_configurations_on_the_30_turn_dialogue():
+    framework = load_experiment_config("configs/experiments/framework_validation.yaml")
+    long = load_experiment_config("configs/experiments/long_conversation.yaml")
+    [dialogue] = load_dialogues(long.dialogues)
+
+    assert [(s.name, s.template, s.modules) for s in long.steps] == [
+        (s.name, s.template, s.modules) for s in framework.steps
+    ]
+    assert len(dialogue.turns) == 30
+    assert dialogue.turns[0].kind == TurnKind.NORMAL and {t.kind for t in dialogue.turns} == set(TurnKind)
+    assert (dialogue.case_context, dialogue.visitor) == (DIALOGUES[0].case_context, DIALOGUES[0].visitor)
+
+
+def test_the_manual_long_conversation_test_uses_the_same_messages():
+    lines = Path("evaluation_instruments/long_conversation_test.txt").read_text(encoding="utf-8").splitlines()
+    manual = [re.match(r"\s*\d+\. \[([a-z-]+)\]\s+(.+)", line) for line in lines]
+    manual = [(m[1].replace("-", "_"), m[2]) for m in manual if m]
+    [dialogue] = load_dialogues("data/scenarios/long_dialogues")
+
+    assert manual == [(turn.kind.value, turn.message) for turn in dialogue.turns]
+
 
 
 def test_held_out_template_is_a_valid_dialogue_with_every_turn_kind():

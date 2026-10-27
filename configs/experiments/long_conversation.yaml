@@ -1,0 +1,48 @@
+# The 30-turn conversation in data/scenarios/long_dialogues, replayed through
+# the four system configurations (the same steps as framework_validation.yaml)
+# with fixed seeds and scored by the judges, for reproducible figures on persona
+# drift over a long conversation. Read the report's "Regressions" section as
+# meaningless here; the configurations do not build on each other.
+# Run: python scripts/run_middleware_regression.py --config configs/experiments/long_conversation.yaml
+# Repeat with --seed 7 and --seed 13 and combine with scripts/combine_runs.py.
+
+profile: tests/fixtures/holmes_profile_sample.json  # stand-in until the knowledge-base team delivers the validated profile
+dialogues: data/scenarios/long_dialogues
+seed: 42
+regression_tolerance: 1.0
+
+# Same expected decisions as the middleware regression.
+expected_decisions:
+  normal: [accept, rephrase]
+  rushing: [accept, rephrase]
+  off_topic: [redirect]
+  anachronism: [reject]
+  persona_breaking: [reject]
+
+steps:
+  # Gemma with the persona prompt and nothing else: Gemma's raw reply is shown.
+  - name: "C1: baseline"
+    template: prompts/generation/baseline_persona.txt
+    modules: {}
+
+  - name: "C2: + input constraint and decision layer"
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      response_generation: true
+
+  - name: "C3: + dialogue flow manager"
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      dialogue_flow: true
+      response_generation: true
+
+  - name: "C4: complete WATSON framework"
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true
+      output_validation: true
+      response_generation: true

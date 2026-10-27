@@ -14,7 +14,9 @@ and the messages is an invented detail.
 
 Note: the live chat uses no fixed seed, so a repeat gives different replies.
 This is one sample of each configuration, useful for spotting behaviour. For
-reproducible figures, replay the conversation with the test runner instead.
+reproducible figures, the test runner replays the same 30 messages with fixed
+seeds and the judges score every turn:
+    python scripts/run_middleware_regression.py --config configs/experiments/long_conversation.yaml
 
 
 BEFORE YOU START

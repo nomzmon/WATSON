@@ -2,3 +2,4 @@ Predefined fictional investigative scenarios used in framework validation and pa
 - scenario_01_<name>.yaml : case premise, clues, suspects, expected investigation stages, allowed resolution
 - scripted_dialogues/     : fixed multi-turn user scripts for automated testing (incl. drift-inducing turns: off-topic, anachronism, persona-breaking)
 - held_out_dialogues/     : the group's held-out test conversations, never used for tuning (see TEMPLATE.yaml.example; run with configs/experiments/held_out.yaml)
+- long_dialogues/         : 30-turn conversation through all five stages, for drift over a long conversation (run with configs/experiments/long_conversation.yaml)
