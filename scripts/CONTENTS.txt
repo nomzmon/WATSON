@@ -8,3 +8,4 @@ Command-line entry points.
 - setup_models.sh          : pull/serve local models
 - export_rating_sheet.py   : blind human rating sheet and answer key from a run
 - compare_ratings.py       : human ratings vs the judges, and between raters
+- run_chat_server.py       : serves the participant chat page with C1-C4 behind it

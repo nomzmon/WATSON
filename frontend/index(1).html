@@ -237,21 +237,13 @@ const CONFIG = {
      "notice" = a system notice from the Decision Layer's Reject path
    ============================================================ */
 async function sendToWatson({ sessionId, participantId, config, message }) {
-  /* --- MOCK: remove once the API is connected --- */
-  await new Promise(r => setTimeout(r, 1200 + Math.random() * 1400));
-  if (/bitcoin|iphone|tiktok|chatgpt|python|recipe/i.test(message))
-    return { kind: 'notice', text: '[System notice] This request cannot be processed in the Sherlock Holmes role-play. Please continue with a question about the case.' };
-  if (/weather|football|movie|music/i.test(message))
-    return { kind: 'holmes', text: 'A diverting thought, but it brings us not one step nearer the truth of this affair. Let us return to the matter at hand.' };
-  const lines = [
-    'Pray be seated, and tell me the matter from the beginning. Omit nothing, however trivial it may seem. The trivial is so often the key.',
-    'Interesting. You say it began on Tuesday. Who else was in the house at the time, and who knew of your movements that evening?',
-    'You have told me what you saw. Now tell me what you did not see, for I find the absences more instructive than the presences.',
-    'There is a small inconsistency in your account, though I do not suggest you have misled me. Go over the sequence once more, slowly.'
-  ];
-  const n = document.querySelectorAll('.msg.holmes').length;
-  return { kind: 'holmes', text: lines[n % lines.length] };
-  /* --- /MOCK --- */
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId, participant_id: participantId, config, message })
+  });
+  if (!res.ok) throw new Error(`chat request failed: ${res.status}`);
+  return res.json()
 }
 
 /* ============================================================ */
@@ -373,7 +365,11 @@ els.confirm.addEventListener('close', () => {
   $('#endCount').textContent = plural(state.exchanges);
   $('#qLink').href = CONFIG.QUESTIONNAIRE_URL;
   show('end');
-  // POST /api/session/end { session_id } goes here when connected
+   fetch('/api/session/end', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: state.sessionId })
+  }).catch(() => {});   // the turns are already logged; ending only frees the conversation on the server
 });
 els.confirm.addEventListener('click', e => { if (e.target === els.confirm) els.confirm.close('stay'); });
 </script>

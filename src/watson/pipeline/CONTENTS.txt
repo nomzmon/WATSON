@@ -3,3 +3,4 @@ Turn orchestration.
 - session.py      : conversation session object (history, state, participant/config IDs)
 - toggles.py      : loads configs/system/*.yaml to enable/disable modules
 - chat.py         : a live conversation with one configuration, each turn logged as a TurnLog line (JSONL)
+- chat_server.py  : backend for the participant chat page (POST /api/chat, /api/session/end), logs every turn
