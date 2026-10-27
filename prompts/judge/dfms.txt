@@ -43,4 +43,4 @@ Score strictly: give 9-10 only when there is nothing the next reply needs to cor
 3-4: significant problems that the next reply must address.
 1-2: the conversation clearly fails the criterion.
 
-For each criterion, first write one or two sentences of reasoning, then give the score. Respond only with JSON containing the keys CST, NP, CC and TBC, each holding a "reasoning" string and a "score" integer, and a key "stage" holding the stage.
+For each criterion, first write a short reason, in no more than 15 words, then give the score. Respond only with JSON containing the keys CST, NP, CC and TBC, each holding a "reasoning" string and a "score" integer, and a key "stage" holding the stage.

@@ -43,4 +43,4 @@ SS (Style and Syntax): Does the language read like Holmes speaking: his vocabula
 3-4: a significant problem; the reply should not be shown as it is.
 1-2: the reply clearly fails the criterion.
 
-For each criterion, first write one or two sentences of reasoning about that criterion only, then give the score. Respond only with JSON containing the keys PCC, NC, HWB and SS, each holding a "reasoning" string and a "score" integer.
+For each criterion, first write a short reason about that criterion only, in no more than 15 words, then give the score. Respond only with JSON containing the keys PCC, NC, HWB and SS, each holding a "reasoning" string and a "score" integer.
