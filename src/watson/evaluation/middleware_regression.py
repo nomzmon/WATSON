@@ -30,6 +30,7 @@ from watson.evaluation.persona_consistency import PersonaConsistencyJudge
 from watson.llm.base import LLMClient
 from watson.middleware.decision.decision import load_decision_thresholds
 from watson.middleware.decision.messages import DecisionMessages
+from watson.middleware.decision.rephrase import Rephraser
 from watson.middleware.dialogue_flow.constraint_selector import load_selection_thresholds
 from watson.middleware.dialogue_flow.flow_evaluator import DFMS_CRITERIA
 from watson.middleware.dialogue_flow.manager import DialogueFlowManager, FlowResult
@@ -117,6 +118,7 @@ class TurnRecord(BaseModel):
     wics_gip: int | None = None
     input_check_reasons: str = ""
     wics_reasoning: str = ""
+    rephrased_message: str = ""  # what Holmes was given instead of the message after a Rephrase decision
     # Dialogue flow: the DFMS, the investigation stage and the guidance added (empty without the Dialogue Flow Manager)
     stage: DialogueStage | None = None
     proposed_stage: DialogueStage | None = None  # the stage the judge proposed; the tracker moves at most one step
@@ -274,6 +276,7 @@ def build_pipeline(step: StepConfig, profile_path: str, generator: ResponseGener
             input_constraint=InputConstraintEngine.from_config(judge),
             decision_thresholds=load_decision_thresholds(),
             decision_messages=DecisionMessages.from_config(),
+            rephraser=Rephraser.from_config(judge),
         )
     if step.modules.dialogue_flow:
         components["dialogue_flow"] = DialogueFlowManager.from_config(judge)
@@ -321,6 +324,7 @@ def run_step(
                 message=turn.message,
                 decision=result.decision.decision if result.decision else None,
                 **_input_check_fields(result.wics, result.decision.reasons if result.decision else []),
+                rephrased_message=(result.decision.rephrased_input or "") if result.decision else "",
                 **_flow_fields(result.flow),
                 **_validation_fields(result.validation),
                 source=result.source,

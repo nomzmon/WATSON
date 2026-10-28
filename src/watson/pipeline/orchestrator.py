@@ -16,6 +16,7 @@ from watson.common.schemas import ComponentLatency, DecisionResult, DecisionType
 from watson.common.utils import timer
 from watson.middleware.decision.decision import DecisionThresholds, decide
 from watson.middleware.decision.messages import DecisionMessages
+from watson.middleware.decision.rephrase import Rephraser
 from watson.middleware.dialogue_flow.manager import DialogueFlowManager, FlowResult
 from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.input_constraint.engine import InputConstraintEngine
@@ -48,6 +49,7 @@ class Pipeline:
         decision_messages: DecisionMessages | None = None,
         dialogue_flow: DialogueFlowManager | None = None,
         output_validation: OutputValidationEngine | None = None,
+        rephraser: Rephraser | None = None,
     ) -> None:
         if input_constraint and not (decision_thresholds and decision_messages):
             raise ValueError("the Input Constraint Engine needs the Decision Layer's thresholds and messages")
@@ -61,11 +63,14 @@ class Pipeline:
         self.decision_messages = decision_messages
         self.dialogue_flow = dialogue_flow
         self.output_validation = output_validation
+        self.rephraser = rephraser  # without one, a Rephrase message reaches Holmes unchanged
+
 
     def run_turn(self, session: ConversationSession, user_message: str, **generation_options: Any) -> TurnResult:
         """Extra keyword arguments go to the generator, e.g. seed=42."""
         latencies = []
         wics = decision = flow = validation = None
+        holmes_reads = user_message  # what Holmes answers: the rephrased message after a Rephrase decision
 
         if self.input_constraint:
             with timer() as elapsed:
@@ -85,10 +90,16 @@ class Pipeline:
                 session.add_exchange(user_message, reply)
                 return TurnResult(user_message=user_message, reply=reply, source="redirect_message",
                                   wics=wics, decision=decision, latencies=latencies)
-            # Rephrase passes the original message through until rephrasing is designed.
+            if decision.decision == DecisionType.REPHRASE and self.rephraser:
+                with timer() as elapsed:
+                    holmes_reads = self.rephraser.rephrase(
+                        user_message, session.history, session.dialogue_stage, session.case_context
+                    )
+                latencies.append(ComponentLatency(component="rephrase", ms=elapsed()))
+                decision = decision.model_copy(update={"rephrased_input": holmes_reads})
 
         prompt = self.builder.build(
-            user_message, session.history, session.dialogue_stage, session.case_context, session.visitor
+            holmes_reads, session.history, session.dialogue_stage, session.case_context, session.visitor
         )
         guided, selected = prompt, []
         if self.dialogue_flow:
