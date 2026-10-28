@@ -106,6 +106,11 @@ def test_repo_config_adds_one_component_per_step():
     ]
     assert all(step.modules.response_generation for step in CONFIG.steps)
 
+def test_the_pipeline_rephrases_only_with_the_input_check():
+    pipelines = [build_pipeline(step, CONFIG.profile, ResponseGenerator(FakeGemma()), FakeJudge()) for step in CONFIG.steps]
+
+    assert [p.rephraser is not None for p in pipelines] == [False, True, True, True, True]
+
 def test_framework_validation_config_has_the_four_system_configurations():
     steps = load_experiment_config("configs/experiments/framework_validation.yaml").steps
     modules = [step.modules for step in steps]
