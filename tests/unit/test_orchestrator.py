@@ -6,6 +6,7 @@ from watson.common.schemas import DecisionType, DialogueStage
 from watson.llm.base import LLMClient
 from watson.middleware.decision.decision import load_decision_thresholds
 from watson.middleware.decision.messages import DecisionMessages
+from watson.middleware.decision.rephrase import Rephraser   
 from watson.middleware.dialogue_flow.manager import DialogueFlowManager
 from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.input_constraint.engine import InputConstraintEngine
@@ -84,14 +85,71 @@ def test_accepted_message_is_scored_then_generated():
     assert [latency.component for latency in result.latencies] == ["input_constraint", "generation"]
 
 
-def test_rephrase_passes_the_original_message_through_for_now():
+class RephraseJudge(FakeJudge):
+    """Scores every message in the Rephrase band (6) and rewrites it when asked."""
+
+    def __init__(self, rewrite: str) -> None:
+        super().__init__(6)
+        self.rewrite = rewrite
+        self.rephrase_prompts: list[str] = []
+
+    def _generate(self, prompt: str, **kwargs) -> str:
+        if "User message to rewrite" in prompt:
+            self.rephrase_prompts.append(prompt)
+            return json.dumps({"rephrased": self.rewrite})
+        return super()._generate(prompt, **kwargs)
+
+
+def make_rephrasing_pipeline(gemma: FakeGemma, judge: RephraseJudge) -> Pipeline:
+    builder = PromptBuilder.from_config(profile_path=PROFILE, template_path="prompts/generation/baseline_persona.txt")
+    return Pipeline(builder, ResponseGenerator(gemma), InputConstraintEngine.from_config(judge),
+                    load_decision_thresholds(), DecisionMessages.from_config(), rephraser=Rephraser.from_config(judge))
+
+
+def test_rephrase_gives_holmes_the_rewritten_message_and_keeps_the_original_in_history():
+    gemma, judge = FakeGemma(), RephraseJudge("What do you make of the open study window?")
+    session = ConversationSession(case_context="The pearl necklace affair")
+    session.add_exchange("The study window stands open.", "Indeed.")
+
+    result = make_rephrasing_pipeline(gemma, judge).run_turn(session, "the window thing?")
+
+    assert result.decision.decision == DecisionType.REPHRASE
+    assert result.decision.rephrased_input == "What do you make of the open study window?"
+    assert "What do you make of the open study window?" in gemma.calls[0]["prompt"]
+    assert "the window thing?" not in gemma.calls[0]["prompt"]
+    assert "Assistant: The study window stands open." in judge.rephrase_prompts[0]
+    assert "The pearl necklace affair" in judge.rephrase_prompts[0]
+    assert [t.text for t in session.history][-2:] == ["the window thing?", "Elementary."]
+    assert [latency.component for latency in result.latencies] == ["input_constraint", "rephrase", "generation"]
+
+
+def test_an_empty_rewrite_keeps_the_original_message():
+    gemma = FakeGemma()
+
+    result = make_rephrasing_pipeline(gemma, RephraseJudge("  ")).run_turn(ConversationSession(), "the window thing?")
+
+    assert result.decision.rephrased_input == "the window thing?"
+    assert "the window thing?" in gemma.calls[0]["prompt"]
+
+
+def test_without_a_rephraser_a_rephrase_message_reaches_holmes_unchanged():
     gemma = FakeGemma()
 
     result = make_pipeline(gemma, wics_score=6).run_turn(ConversationSession(), "the window thing?")
 
     assert result.decision.decision == DecisionType.REPHRASE
-    assert result.source == "generator"
+    assert result.decision.rephrased_input is None
     assert "the window thing?" in gemma.calls[0]["prompt"]
+
+
+def test_an_accepted_message_is_not_rephrased():
+    gemma, judge = FakeGemma(), RephraseJudge("unused")
+    judge.score = 9
+
+    result = make_rephrasing_pipeline(gemma, judge).run_turn(ConversationSession(), "What of the footprints?")
+
+    assert (result.decision.decision, result.decision.rephrased_input) == (DecisionType.ACCEPT, None)
+    assert judge.rephrase_prompts == []
 
 
 def test_redirect_replies_with_the_fixed_message_and_keeps_it_in_history():

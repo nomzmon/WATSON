@@ -1,6 +1,6 @@
-# Fixed Decision Layer replies (thesis Section 5.2.1.1), used until rephrasing
-# and redirect generation are designed. DRAFT wording for group review.
-# Rephrase currently passes the visitor's original message through unchanged.
+# Fixed Decision Layer replies (thesis Section 5.2.1.1), used until redirect
+# generation is designed. DRAFT wording for group review. Rephrase has no fixed
+# reply: the message is rewritten (rephrase.txt) and Holmes answers the rewrite.
 
 # Redirect: steer the visitor back to the investigation, in Holmes' voice.
 redirect: >-
