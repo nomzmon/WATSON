@@ -1,0 +1,24 @@
+[
+  {
+    "step": 1,
+    "name": "persona prompt only",
+    "persona_normal": 8.67,
+    "persona_drift": 8.67,
+    "drift_caught": 0,
+    "drift_total": 6,
+    "normal_blocked": 0,
+    "normal_total": 15,
+    "mean_latency_ms": 21419.6
+  },
+  {
+    "step": 2,
+    "name": "+ input constraint and decision layer",
+    "persona_normal": 8.62,
+    "persona_drift": null,
+    "drift_caught": 6,
+    "drift_total": 6,
+    "normal_blocked": 2,
+    "normal_total": 15,
+    "mean_latency_ms": 22457.4
+  }
+]

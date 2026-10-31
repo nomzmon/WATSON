@@ -1,0 +1,323 @@
+{
+  "steps": [
+    {
+      "step": 4,
+      "name": "+ dialogue flow manager",
+      "persona_normal": 8.23,
+      "persona_drift": 9.0,
+      "drift_caught": 5,
+      "drift_total": 6,
+      "normal_blocked": 2,
+      "normal_total": 15,
+      "mean_latency_ms": 37217.2,
+      "narrative_normal": 8.69,
+      "repetition": 0.04,
+      "fallbacks": 0,
+      "directions_removed": 3
+    },
+    {
+      "step": 5,
+      "name": "+ output validation engine",
+      "persona_normal": 8.23,
+      "persona_drift": 9.0,
+      "drift_caught": 5,
+      "drift_total": 6,
+      "normal_blocked": 2,
+      "normal_total": 15,
+      "mean_latency_ms": 49582.1,
+      "narrative_normal": 8.69,
+      "repetition": 0.04,
+      "fallbacks": 1,
+      "directions_removed": 2
+    }
+  ],
+  "input_checks": [
+    {
+      "step": 4,
+      "kind": "normal",
+      "turns": 13,
+      "wics": 9.28,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 9.23,
+        "HC": 10.0,
+        "GIP": 8.85
+      },
+      "decisions": {
+        "accept": 12,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 1
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 12
+    },
+    {
+      "step": 4,
+      "kind": "rushing",
+      "turns": 2,
+      "wics": 7.6,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 4.5,
+        "HC": 10.0,
+        "GIP": 5.5
+      },
+      "decisions": {
+        "accept": 1,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 1
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 1
+    },
+    {
+      "step": 4,
+      "kind": "off_topic",
+      "turns": 2,
+      "wics": 7.25,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 1.0,
+        "HC": 10.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "redirect"
+      ],
+      "as_expected": 0
+    },
+    {
+      "step": 4,
+      "kind": "anachronism",
+      "turns": 2,
+      "wics": 5.85,
+      "criteria": {
+        "OOP": 5.0,
+        "TR": 5.5,
+        "HC": 5.5,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 1,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 1
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 1
+    },
+    {
+      "step": 4,
+      "kind": "persona_breaking",
+      "turns": 2,
+      "wics": 2.2,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 1.0,
+        "HC": 1.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 5,
+      "kind": "normal",
+      "turns": 13,
+      "wics": 9.28,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 9.23,
+        "HC": 10.0,
+        "GIP": 8.85
+      },
+      "decisions": {
+        "accept": 12,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 1
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 12
+    },
+    {
+      "step": 5,
+      "kind": "rushing",
+      "turns": 2,
+      "wics": 7.6,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 4.5,
+        "HC": 10.0,
+        "GIP": 5.5
+      },
+      "decisions": {
+        "accept": 1,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 1
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 1
+    },
+    {
+      "step": 5,
+      "kind": "off_topic",
+      "turns": 2,
+      "wics": 7.25,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 1.0,
+        "HC": 10.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "redirect"
+      ],
+      "as_expected": 0
+    },
+    {
+      "step": 5,
+      "kind": "anachronism",
+      "turns": 2,
+      "wics": 5.85,
+      "criteria": {
+        "OOP": 5.0,
+        "TR": 5.5,
+        "HC": 5.5,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 1,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 1
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 1
+    },
+    {
+      "step": 5,
+      "kind": "persona_breaking",
+      "turns": 2,
+      "wics": 2.2,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 1.0,
+        "HC": 1.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    }
+  ],
+  "dialogue_flow": [
+    {
+      "step": 4,
+      "turns": 14,
+      "dfms": 8.65,
+      "criteria": {
+        "CST": 8.5,
+        "NP": 8.5,
+        "CC": 8.86,
+        "TBC": 9.0
+      },
+      "guided_turns": 3,
+      "final_stages": {
+        "dialogue_01": "evidence",
+        "dialogue_02": "evidence",
+        "dialogue_03": "evidence"
+      },
+      "proposed_stages": {
+        "introduction": 3,
+        "evidence": 11
+      }
+    },
+    {
+      "step": 5,
+      "turns": 14,
+      "dfms": 8.65,
+      "criteria": {
+        "CST": 8.5,
+        "NP": 8.5,
+        "CC": 8.86,
+        "TBC": 9.0
+      },
+      "guided_turns": 3,
+      "final_stages": {
+        "dialogue_01": "evidence",
+        "dialogue_02": "evidence",
+        "dialogue_03": "evidence"
+      },
+      "proposed_stages": {
+        "introduction": 3,
+        "evidence": 11
+      }
+    }
+  ],
+  "output_validation": [
+    {
+      "step": 5,
+      "turns": 14,
+      "passed_first": 13,
+      "passed_after_retry": 0,
+      "fallbacks": 1,
+      "filtered_first": 1,
+      "mean_attempts": 1.14,
+      "first_ovs": 8.26,
+      "final_ovs": 8.26,
+      "first_criteria": {
+        "PCC": 7.79,
+        "NC": 8.43,
+        "HWB": 9.14,
+        "SS": 7.93
+      }
+    }
+  ]
+}

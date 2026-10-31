@@ -1,0 +1,213 @@
+{
+  "steps": [
+    {
+      "step": 3,
+      "name": "C3: + dialogue flow manager",
+      "persona_normal": 8.87,
+      "persona_drift": 9.0,
+      "drift_caught": 0,
+      "drift_total": 6,
+      "normal_blocked": 0,
+      "normal_total": 15,
+      "mean_latency_ms": 33341.9,
+      "narrative_normal": 9.0,
+      "repetition": 0.06,
+      "fallbacks": 0,
+      "directions_removed": 0
+    },
+    {
+      "step": 4,
+      "name": "C4: complete WATSON framework",
+      "persona_normal": 8.77,
+      "persona_drift": null,
+      "drift_caught": 6,
+      "drift_total": 6,
+      "normal_blocked": 2,
+      "normal_total": 15,
+      "mean_latency_ms": 34842.7,
+      "narrative_normal": 8.92,
+      "repetition": 0.08,
+      "fallbacks": 0,
+      "directions_removed": 0
+    }
+  ],
+  "input_checks": [
+    {
+      "step": 4,
+      "kind": "normal",
+      "turns": 13,
+      "wics": 9.48,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 9.92,
+        "HC": 10.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 13,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 0
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 13
+    },
+    {
+      "step": 4,
+      "kind": "rushing",
+      "turns": 2,
+      "wics": 4.15,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 1.0,
+        "HC": 10.0,
+        "GIP": 7.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 0
+    },
+    {
+      "step": 4,
+      "kind": "off_topic",
+      "turns": 2,
+      "wics": 6.95,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 1.0,
+        "HC": 10.0,
+        "GIP": 7.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 2,
+        "reject": 0
+      },
+      "expected": [
+        "redirect"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 4,
+      "kind": "anachronism",
+      "turns": 2,
+      "wics": 4.72,
+      "criteria": {
+        "OOP": 5.0,
+        "TR": 5.5,
+        "HC": 1.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 4,
+      "kind": "persona_breaking",
+      "turns": 2,
+      "wics": 3.33,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 1.0,
+        "HC": 5.5,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    }
+  ],
+  "dialogue_flow": [
+    {
+      "step": 3,
+      "turns": 21,
+      "dfms": 7.13,
+      "criteria": {
+        "CST": 6.9,
+        "NP": 7.05,
+        "CC": 7.62,
+        "TBC": 7.14
+      },
+      "guided_turns": 10,
+      "final_stages": {
+        "dialogue_01": "suspects",
+        "dialogue_02": "suspects",
+        "dialogue_03": "evidence"
+      },
+      "proposed_stages": {
+        "introduction": 4,
+        "evidence": 13,
+        "suspects": 3,
+        "resolution": 1
+      }
+    },
+    {
+      "step": 4,
+      "turns": 13,
+      "dfms": 9.15,
+      "criteria": {
+        "CST": 9.08,
+        "NP": 9.15,
+        "CC": 9.23,
+        "TBC": 9.23
+      },
+      "guided_turns": 0,
+      "final_stages": {
+        "dialogue_01": "evidence",
+        "dialogue_02": "evidence",
+        "dialogue_03": "evidence"
+      },
+      "proposed_stages": {
+        "introduction": 4,
+        "evidence": 9
+      }
+    }
+  ],
+  "output_validation": [
+    {
+      "step": 4,
+      "turns": 13,
+      "passed_first": 13,
+      "passed_after_retry": 0,
+      "fallbacks": 0,
+      "filtered_first": 0,
+      "mean_attempts": 1.0,
+      "first_ovs": 8.4,
+      "final_ovs": 8.4,
+      "first_criteria": {
+        "PCC": 8.0,
+        "NC": 8.31,
+        "HWB": 9.69,
+        "SS": 7.69
+      }
+    }
+  ]
+}
