@@ -61,7 +61,7 @@ data/reference/*
 !data/reference/CONTENTS.txt
 
 # ---------- Experiment run artifacts ----------
-experiments/**/runs/
+
 experiments/participant_study/logs/
 experiments/participant_study/responses/
 
