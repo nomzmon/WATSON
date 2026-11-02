@@ -84,7 +84,7 @@ def main() -> None:
     )
     judge_client = LlamaClient.from_settings(settings, timeout=300)
     generator = ResponseGenerator.from_config(settings)
-    persona_judge = PersonaConsistencyJudge.from_config(judge_client, config.profile)
+    persona_judge = PersonaConsistencyJudge.from_config(judge_client, config.evaluation_profile or config.profile)
     narrative_judge = NarrativeConsistencyJudge.from_config(judge_client)
 
     summaries, all_records = [], []

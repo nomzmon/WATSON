@@ -2,3 +2,4 @@ Shared utilities.
 - config.py  : YAML + .env loading
 - schemas.py : Pydantic models (PersonaProfile, JudgeScores, TurnLog, etc.)
 - utils.py
+- persona.py : loads a persona profile, flat or the group's layered format

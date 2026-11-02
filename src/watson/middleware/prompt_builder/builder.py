@@ -14,6 +14,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from watson.common.config import load_text
+from watson.common.persona import load_persona_profile
 from watson.common.schemas import DialogueStage, HistoryTurn, PersonaProfile
 
 _LAYER_HEADINGS = {
@@ -49,10 +50,9 @@ class PromptBuilder:
         template_path: str | Path = "prompts/generation/structured_prompt.txt",
         history_turns: int = 10,
     ) -> PromptBuilder:
-        profile = PersonaProfile.model_validate_json(load_text(profile_path))
-        return cls(profile, load_text(template_path), history_turns)
+        return cls(load_persona_profile(profile_path), load_text(template_path), history_turns)
 
-    def build(
+    def build( 
         self,
         user_message: str,
         history: Sequence[HistoryTurn] = (),

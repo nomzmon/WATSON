@@ -19,6 +19,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from watson.common.config import load_text, load_yaml
+from watson.common.persona import load_persona_profile
 from watson.common.rubric import CriterionJudgement, load_rubric_weights, weighted_score
 from watson.common.schemas import CriterionScore, PersonaProfile, RubricName, RubricScore
 from watson.llm.base import LLMClient
@@ -85,7 +86,7 @@ class OutputValidator:
         rubric_path: str | Path = "configs/rubrics/ovs.yaml",
         prompt_path: str | Path = "prompts/judge/ovs.txt",
     ) -> OutputValidator:
-        profile = PersonaProfile.model_validate_json(load_text(profile_path))
+        profile = load_persona_profile(profile_path)
         cap = load_validation_settings(rubric_path).unsupported_detail_cap
         return cls(judge, profile, load_ovs_weights(rubric_path), load_text(prompt_path), unsupported_detail_cap=cap)
 

@@ -73,7 +73,16 @@ def test_report_records_how_the_run_was_made():
     assert "- **Code version:** abc1234" in report
     assert "- **Generator:** gemma:7b-instruct-q4_0" in report
     assert f"- **Persona profile:** `{CONFIG.profile}`" in report
+    assert f"- **Persona judge scores against:** `{CONFIG.profile}`" in report
 
+def test_report_names_the_profiles_of_steps_that_set_their_own():
+    steps = [CONFIG.steps[0], CONFIG.steps[1].model_copy(update={"profile": "group.json"}), *CONFIG.steps[2:]]
+    config = CONFIG.model_copy(update={"steps": steps, "evaluation_profile": "group.json"})
+
+    report = render_report(DETAILS, config, DIALOGUES, SUMMARIES, [], RECORDS)
+
+    assert "- **Step 2 persona profile:** `group.json`" in report
+    assert "- **Persona judge scores against:** `group.json`" in report
 
 def test_report_has_a_row_per_step_with_its_components():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)

@@ -68,6 +68,8 @@ def render_report(
         f"- **Generator:** {details.generator_model}",
         f"- **Judge:** {details.judge_model}",
         f"- **Persona profile:** `{config.profile}`",
+         *[f"- **Step {i} persona profile:** `{step.profile}`" for i, step in enumerate(config.steps, 1) if step.profile],
+        f"- **Persona judge scores against:** `{config.evaluation_profile or config.profile}`",
         f"- **Conversations:** {len(dialogues)} ({turns} turns), from `{config.dialogues}`",
         f"- **Seed:** {config.seed}",
         f"- **Regression tolerance:** {config.regression_tolerance:g} (persona score, 1-10 scale)",

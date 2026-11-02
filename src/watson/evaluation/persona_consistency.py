@@ -12,6 +12,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from watson.common.config import load_text
+from watson.common.persona import load_persona_profile
 from watson.common.schemas import HistoryTurn, PersonaProfile
 from watson.llm.base import LLMClient
 from watson.middleware.prompt_builder.builder import render_persona
@@ -38,7 +39,7 @@ class PersonaConsistencyJudge:
         profile_path: str | Path,
         prompt_path: str | Path = "prompts/judge/persona_consistency.txt",
     ) -> PersonaConsistencyJudge:
-        profile = PersonaProfile.model_validate_json(load_text(profile_path))
+        profile = load_persona_profile(profile_path)    
         return cls(judge, profile, load_text(prompt_path))
 
     def score(self, history: Sequence[HistoryTurn], user_message: str, reply: str) -> PersonaJudgement:

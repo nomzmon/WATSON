@@ -74,6 +74,7 @@ class ScriptedDialogue(BaseModel):
 class StepConfig(BaseModel):
     name: str
     template: str
+    profile: str | None = None  # the persona profile for this step; defaults to the experiment's
     modules: ModuleToggles = Field(default_factory=ModuleToggles)
 
     @field_validator("modules")
@@ -95,6 +96,7 @@ class StepConfig(BaseModel):
 
 class ExperimentConfig(BaseModel):
     profile: str
+    evaluation_profile: str | None = None  # the profile the persona judge scores against; defaults to `profile`
     dialogues: str
     seed: int
     regression_tolerance: float
@@ -269,6 +271,7 @@ def history_before_each_turn(records: list[TurnRecord]) -> dict[tuple[int, str, 
 
 
 def build_pipeline(step: StepConfig, profile_path: str, generator: ResponseGenerator, judge: LLMClient) -> Pipeline:
+    profile_path = step.profile or profile_path
     builder = PromptBuilder.from_config(profile_path=profile_path, template_path=step.template)
     components = {}
     if step.modules.input_constraint:

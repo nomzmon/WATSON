@@ -111,6 +111,16 @@ def test_the_pipeline_rephrases_only_with_the_input_check():
 
     assert [p.rephraser is not None for p in pipelines] == [False, True, True, True, True]
 
+def test_persona_comparison_runs_c1_and_c4_with_each_profile_and_judges_against_the_group_profile():
+    config = load_experiment_config("configs/experiments/persona_comparison.yaml")
+    pipelines = [build_pipeline(step, config.profile, ResponseGenerator(FakeGemma()), FakeJudge()) for step in config.steps]
+
+    assert [p.builder.persona_profile.id for p in pipelines] == [
+        "sample_fixture_not_validated", "holmes_profile_condensed", "sample_fixture_not_validated",
+        "holmes_profile_condensed"]
+    assert [p.output_validation is not None for p in pipelines] == [False, False, True, True]
+    assert config.evaluation_profile == "data/persona_profiles/holmes_profile_condensed.json"
+
 def test_framework_validation_config_has_the_four_system_configurations():
     steps = load_experiment_config("configs/experiments/framework_validation.yaml").steps
     modules = [step.modules for step in steps]

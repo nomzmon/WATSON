@@ -1,0 +1,54 @@
+# The group's persona profile against the synthetic stand-in, as our adviser
+# recommended: the same conversations, seed and configurations, with only the
+# persona profile changed. C1 shows what the profile does on its own (Gemma with
+# the persona prompt and nothing else); C4 shows it inside the complete framework.
+# Steps 1 and 3 use `profile` below; steps 2 and 4 set their own.
+# The persona judge scores every reply against the group's profile
+# (evaluation_profile), so all four steps are measured against the same Holmes.
+# The steps do not build on each other, so read the report's "Regressions"
+# section as meaningless here.
+# For the 30-turn conversation, set dialogues to data/scenarios/long_dialogues.
+# Run: python scripts/run_middleware_regression.py --config configs/experiments/persona_comparison.yaml
+
+profile: tests/fixtures/holmes_profile_sample.json  # the synthetic stand-in
+evaluation_profile: data/persona_profiles/holmes_profile_condensed.json
+dialogues: data/scenarios/scripted_dialogues
+seed: 42
+regression_tolerance: 1.0
+
+# Same expected decisions as the framework validation.
+expected_decisions:
+  normal: [accept, rephrase]
+  rushing: [accept, rephrase]
+  off_topic: [redirect]
+  anachronism: [reject]
+  persona_breaking: [reject]
+
+steps:
+  - name: "C1: baseline, synthetic profile"
+    template: prompts/generation/baseline_persona.txt
+    modules: {}
+
+  - name: "C1: baseline, group profile"
+    template: prompts/generation/baseline_persona.txt
+    profile: data/persona_profiles/holmes_profile_condensed.json
+    modules: {}
+
+  - name: "C4: complete framework, synthetic profile"
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true
+      output_validation: true
+      response_generation: true
+
+  - name: "C4: complete framework, group profile"
+    template: prompts/generation/structured_prompt.txt
+    profile: data/persona_profiles/holmes_profile_condensed.json
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true
+      output_validation: true
+      response_generation: true
