@@ -7,6 +7,7 @@
 # (evaluation_profile), so all four steps are measured against the same Holmes.
 # The steps do not build on each other, so read the report's "Regressions"
 # section as meaningless here.
+# For the short turns, dialogues: data/scenarios/scripted_dialogues
 # For the 30-turn conversation, set dialogues to data/scenarios/long_dialogues.
 # Run: python scripts/run_middleware_regression.py --config configs/experiments/persona_comparison.yaml
 

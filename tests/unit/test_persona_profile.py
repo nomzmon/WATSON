@@ -32,7 +32,8 @@ def test_entries_are_kept_word_for_word_except_the_sections_left_out():
     text = render_persona(load_persona_profile(GROUP))
 
     assert "- Openness (high): Curious about baffling puzzles; tests unconventional ideas" in text
-    assert "- Address Watson with familiar professional warmth" in text  # conversational rules on their own
+    assert '- Address your assistant as "my dear assistant"' in text  # conversational rules on their own
+    assert "dear Watson" not in text  # the user plays Holmes' assistant, not Watson
     assert '- Expertise, "Master": Observation, deduction' in text
     assert "Universalism (unsure)" in text  # values ranked low or unsure are kept
     assert "Reichenbach" not in text  # cases
