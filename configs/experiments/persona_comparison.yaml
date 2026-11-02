@@ -13,7 +13,7 @@
 
 profile: tests/fixtures/holmes_profile_sample.json  # the synthetic stand-in
 evaluation_profile: data/persona_profiles/holmes_profile_condensed.json
-dialogues: data/scenarios/scripted_dialogues
+dialogues: data/scenarios/long_dialogues
 seed: 42
 regression_tolerance: 1.0
 
