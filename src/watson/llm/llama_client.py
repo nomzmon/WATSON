@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from watson.common.config import Settings, get_settings
+from watson.common.config import Settings, get_settings, load_yaml
 from watson.llm.base import T
 from watson.llm.json_parsing import parse_json_object
 from watson.llm.ollama import OllamaClient
@@ -15,10 +15,13 @@ class LlamaClient(OllamaClient):
         super().__init__(model_name, temperature=temperature, **kwargs)
 
     @classmethod
-    def from_settings(cls, settings: Settings | None = None, **kwargs: Any) -> LlamaClient:
+    def from_settings(
+        cls, settings: Settings | None = None, config_path: str = "configs/models/judge.yaml", **kwargs: Any
+    ) -> LlamaClient:
         settings = settings or get_settings()
         if not settings.judge_model:
             raise ValueError("JUDGE_MODEL is not set in .env (e.g. JUDGE_MODEL=llama3:8b-instruct-q4_0)")
+        kwargs.setdefault("context_window", load_yaml(config_path).get("context_window"))
         return cls(settings.judge_model, base_url=settings.model_server_url, **kwargs)
 
     def generate_structured(self, prompt: str, schema: type[T], **kwargs: Any) -> T:

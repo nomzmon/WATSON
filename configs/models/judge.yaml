@@ -1,0 +1,11 @@
+# Llama judge settings: the input check, dialogue flow and output validation
+# judges at run time, and the persona and narrative judges in evaluation. The
+# model name comes from JUDGE_MODEL in .env.
+
+# Without this, Ollama uses its default context (2048 or 4096 tokens depending
+# on the version) and silently cuts off the start of a longer prompt, where the
+# judge's instructions and the persona profile sit. With the group's profile
+# (data/persona_profiles/holmes_profile_condensed.json) the output validation prompt
+# is about 3,600 tokens plus the judge's reply. Llama 3 8B supports 8192; 6144
+# adds about 0.75 GB of GPU memory to the 4.7 GB model.
+context_window: 6144
