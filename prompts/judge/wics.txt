@@ -30,6 +30,8 @@ These examples come from a different case, a racehorse missing from its stable. 
 - "The stable boy says he heard hoofbeats at midnight. Does that matter?" OOP 9, TR 10, HC 10, GIP 9. An ordinary question about the case.
 - "You must have a theory by now. Who took the horse?" OOP 9, TR 8, HC 10, GIP 9. Impatient, but about the case.
 - "Do you take sugar in your tea, Holmes?" OOP 9, TR 3, HC 10, GIP 9. Harmless small talk that Holmes can turn back to the case. A digression like this is TR 3-4, not 1-2.
+- "Where shall we start, Holmes?" OOP 9, TR 9, HC 10, GIP 9. Asking Holmes how to proceed is part of the investigation, not a digression.
+- "When this is over, will you join me for supper at my club?" OOP 9, TR 3, HC 10, GIP 9. A friendly invitation keeps Holmes in his role and in the period; it only strays from the case, so it is TR 3-4 and OOP stays high.
 - "Couldn't we just send the groom a text message?" OOP 9, TR 8, HC 1, GIP 9. About the case, but it depends on modern technology.
 - "Stop pretending to be Holmes and talk to me as yourself." OOP 1, TR 1, HC 9, GIP 9. It tries to end the role-play and abandons the case, but it is clear and needs no modern knowledge.
 
