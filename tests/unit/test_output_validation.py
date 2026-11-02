@@ -15,6 +15,7 @@ from watson.middleware.output_validation.safety_filter import FilterSettings, Sa
 from watson.middleware.output_validation.validator import (
     OutputValidator,
     OVSJudgement,
+    quoted_details,
     ValidationSettings,
     load_ovs_weights,
     load_validation_settings,
@@ -116,7 +117,8 @@ def test_a_reply_passes_only_with_a_high_enough_ovs_and_no_very_low_criterion(sc
 def test_unsupported_details_cap_narrative_coherence_and_are_noted():
     judge = DetailJudge(["the window latch was broken", "boots with a moderate amount of tread"], GOOD)
 
-    ovs = OutputValidator.from_config(judge, PROFILE).evaluate(make_prompt(), "The latch was broken.")
+    ovs = OutputValidator.from_config(judge, PROFILE).evaluate(
+        make_prompt(), "The window latch was broken, and there were boots with a moderate amount of tread.")
 
     assert ovs.criteria["NC"].score == 5  # repo cap
     assert "the window latch was broken; boots with a moderate amount of tread" in ovs.criteria["NC"].rationale
@@ -136,6 +138,15 @@ def test_a_reply_without_unsupported_details_keeps_its_narrative_score():
 
     assert ovs.criteria["NC"].score == 9
 
+@pytest.mark.parametrize("listed", [["nothing"], ["None."], ["Mr. Graves resides at a hotel"]])
+def test_placeholders_and_details_not_in_the_reply_are_ignored(listed):
+    ovs = OutputValidator.from_config(DetailJudge(listed, GOOD), PROFILE).evaluate(make_prompt(), "Nothing is certain yet.")
+
+    assert ovs.criteria["NC"].score == 9
+
+
+def test_details_match_the_reply_whatever_the_case_and_punctuation():
+    assert quoted_details(["THE DIAMOND'S FATE."], "It leads us closer to the diamond's fate!") == ["THE DIAMOND'S FATE."]
 
 def test_repo_prompt_asks_for_unsupported_details_before_the_scores():
     prompt = OutputValidator.from_config(ScriptedJudge(GOOD), PROFILE).build_prompt(make_prompt(), "Elementary.")
@@ -227,7 +238,7 @@ def test_a_failed_reply_is_regenerated_with_strengthened_constraints():
     assert retry_constraints["CC-NO-INVENTED-EVIDENCE"] == 2
 
 def test_a_reply_with_invented_evidence_is_retried_with_the_continuity_rules_strengthened():
-    result, _ = run_loop(DetailJudge(["the window latch was broken"], FAIR, GOOD))
+    result, _ = run_loop(DetailJudge(["reply 1"], FAIR, GOOD))  # run_loop's first reply is "reply 1"
 
     assert (result.reply, [a.passed for a in result.attempts]) == ("reply 2", [False, True])
     assert {c.id: c.level for c in result.attempts[1].constraints}["CC-NO-INVENTED-EVIDENCE"] == 2

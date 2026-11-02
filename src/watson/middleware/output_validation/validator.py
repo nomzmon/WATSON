@@ -13,7 +13,8 @@ invented evidence passes only if it is otherwise strong; else it is retried.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -26,7 +27,8 @@ from watson.llm.base import LLMClient
 from watson.middleware.prompt_builder.builder import StructuredPrompt, render_history, render_persona
 
 OVS_CRITERIA = ("PCC", "NC", "HWB", "SS")
-
+# What the judge sometimes writes in the list instead of leaving it empty.
+_NO_DETAILS = {"none", "nothing", "n a", "no details", "no unsupported details"}
 
 class OVSJudgement(BaseModel):
     # Required in the schema sent to the judge, so it cannot skip the list; parsing still accepts its absence.
@@ -55,6 +57,15 @@ def load_ovs_weights(path: str | Path = "configs/rubrics/ovs.yaml") -> dict[str,
 def load_validation_settings(path: str | Path = "configs/rubrics/ovs.yaml") -> ValidationSettings:
     return ValidationSettings.model_validate(load_yaml(path)["validation"])
 
+def _plain(text: str) -> str:
+    return " ".join(re.sub(r"[^\w\s]", " ", text.lower()).split())
+
+
+def quoted_details(details: Sequence[str], reply: str) -> list[str]:
+    """The listed details that are really quoted from the reply: placeholders such as "nothing" and details the
+    judge copied from earlier in the conversation are dropped (both were seen in the 29 Oct and 2 Nov runs)."""
+    reply_text = _plain(reply)
+    return [d.strip() for d in details if (plain := _plain(d)) and plain not in _NO_DETAILS and plain in reply_text]
 
 def passes(ovs: RubricScore, settings: ValidationSettings) -> bool:
     lowest = min(c.score for c in ovs.criteria.values())
@@ -108,7 +119,7 @@ class OutputValidator:
                                  rationale=getattr(judgement, code).reasoning)
             for code in OVS_CRITERIA
         }
-        details = [d for d in judgement.unsupported_details if d.strip()]
+        details = quoted_details(judgement.unsupported_details, reply)
         if details and self.unsupported_detail_cap is not None:
             nc = criteria["NC"]
             criteria["NC"] = nc.model_copy(update={
