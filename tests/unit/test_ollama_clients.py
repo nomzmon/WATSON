@@ -105,6 +105,10 @@ def test_from_settings_reads_model_and_server_url():
     assert (generator.model_name, generator.base_url) == ("gemma:7b-instruct-q4_0", "http://gpu-box:11434")
     assert (judge.model_name, judge.base_url) == ("llama3:8b-instruct-q4_0", "http://gpu-box:11434")
 
+def test_the_judge_uses_the_context_window_in_its_config():
+    judge = LlamaClient.from_settings(Settings(judge_model="llama3:8b-instruct-q4_0"))
+
+    assert judge.default_options["num_ctx"] == 6144
 
 def test_from_settings_requires_model_name():
     with pytest.raises(ValueError, match="GENERATOR_MODEL"):
