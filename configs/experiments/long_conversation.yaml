@@ -6,7 +6,7 @@
 # Run: python scripts/run_middleware_regression.py --config configs/experiments/long_conversation.yaml
 # Repeat with --seed 7 and --seed 13 and combine with scripts/combine_runs.py.
 
-profile: tests/fixtures/holmes_profile_sample.json  # stand-in until the knowledge-base team delivers the validated profile
+profile: data/persona_profiles/holmes_profile_condensed.json  # the group's condensed profile (synthetic stand-in: tests/fixtures/holmes_profile_sample.json)
 dialogues: data/scenarios/long_dialogues
 seed: 42
 regression_tolerance: 1.0

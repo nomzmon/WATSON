@@ -121,6 +121,11 @@ def test_persona_comparison_runs_c1_and_c4_with_each_profile_and_judges_against_
     assert [p.output_validation is not None for p in pipelines] == [False, False, True, True]
     assert config.evaluation_profile == "data/persona_profiles/holmes_profile_condensed.json"
 
+@pytest.mark.parametrize("name", ["middleware_regression", "framework_validation", "held_out", "long_conversation"])
+def test_experiments_use_the_groups_condensed_profile(name):
+    assert load_experiment_config(f"configs/experiments/{name}.yaml").profile == (
+        "data/persona_profiles/holmes_profile_condensed.json")
+
 def test_framework_validation_config_has_the_four_system_configurations():
     steps = load_experiment_config("configs/experiments/framework_validation.yaml").steps
     modules = [step.modules for step in steps]
@@ -363,7 +368,7 @@ def test_persona_judge_sees_the_profile_history_and_reply():
     run(1, judge=judge)
 
     second_turn_prompt = judge.persona_prompts[1]
-    assert "Relentlessly analytical" in second_turn_prompt
+    assert "Openness (high): Curious about baffling puzzles" in second_turn_prompt  # the group's profile
     assert "Visitor: Good evening, Mr. Holmes." in second_turn_prompt
     assert "replied as Holmes\n<<<\nElementary.\n>>>" in second_turn_prompt
 
