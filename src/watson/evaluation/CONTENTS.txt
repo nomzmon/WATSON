@@ -5,3 +5,4 @@ Evaluation and analysis code.
 - sus.py               : System Usability Scale scoring
 - stats.py             : statistical tests across the 4 configurations
 - judge_agreement.py   : judge vs human agreement (e.g. Cohen's kappa)
+- weight_comparison.py : current vs variant rubric weights, recomputed from finished runs' criterion scores

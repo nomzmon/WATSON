@@ -1,0 +1,35 @@
+# Weighted Interaction Constraint Score (WICS)
+# Thesis Section 5.2.1, Equation 5.1 and Table 5.2.
+# The judge scores each criterion as a whole number from 1 to 10.
+
+weights:
+  OOP: 0.25  # Out-of-Persona Compatibility
+  TR: 0.25   # Topic Relevance
+  HC: 0.25   # Historical Consistency
+  GIP: 0.25  # Guided Input Compliance
+
+# How many earlier turns the judge sees (a visitor message and a Holmes reply
+# are one turn each, so 2 is the last exchange). DRAFT: lowered from 6 after
+# run 3, where the same message got different decisions depending on the
+# conversation before it. The case context is always included in full.
+history_turns: 2
+
+# Decision Layer (Section 5.2.1.1). Each value is the minimum score for that
+# decision; anything below `redirect` is Reject. The final decision is the
+# stricter of the WICS band and the lowest single criterion's band.
+decision:
+  wics:
+    accept: 8.0
+    rephrase: 6.0
+    redirect: 4.0
+  lowest_criterion:
+    accept: 7
+    rephrase: 5
+    redirect: 3
+  # When the only criterion in the reject band is TR, the message is off-topic
+  # but keeps Holmes in his role and the period, so true redirects it instead of
+  # rejecting it. false follows Table 5.2 as written: any criterion at 2 or
+  # below rejects (runs 2-7: off-topic turns always got TR 1-2 and were never
+  # redirected). Set to true by the group after the 2026-10-20 quick input
+  # checks: 17/21 decisions as expected with false, 19/21 with true.
+  low_topic_relevance_redirects: true

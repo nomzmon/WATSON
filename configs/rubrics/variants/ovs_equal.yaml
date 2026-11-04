@@ -1,0 +1,78 @@
+# Output Validation Score (OVS)
+# Thesis Section 5.2.3, Equation 5.3 and Table 5.4. The judge scores each
+# criterion of the candidate reply as a whole number from 1 to 10.
+
+weights:
+  PCC: 0.25  # Persona Consistency
+  NC: 0.25   # Narrative Coherence
+  HWB: 0.25  # Historical and World Boundary
+  SS: 0.25   # Style and Syntax
+
+# DRAFT values for group review: the thesis does not give the pass threshold,
+# the retry limit or the fallback reply.
+validation:
+  # A reply passes when its OVS reaches `pass_threshold` and no criterion is
+  # below `min_criterion` (the same "stricter of the two" idea as the WICS).
+  pass_threshold: 7.0
+  min_criterion: 5
+  # Regenerations allowed after the first reply fails (so at most 3 replies).
+  max_retries: 2
+  # Criteria below this get their constraints strengthened before a retry; if
+  # none is, the lowest criterion is used.
+  weak_criterion_below: 7
+  # The judge first lists details the reply states as fact that appear in
+  # neither the case nor the conversation. If it lists any, Narrative Coherence
+  # scores at most this (added after the 25 Oct runs, where the judge passed
+  # invented evidence). Balanced version: at 5 the criterion still meets
+  # `min_criterion`, so a flagged reply passes only if the other criteria are
+  # strong enough to keep the OVS at 7; a cap of 3 (the quality version)
+  # fails every flagged reply and fell back on 10 of 12 turns.
+  unsupported_detail_cap: 5
+
+# Returned, in Holmes' voice, when every attempt fails validation.
+fallback_message: >-
+  Forgive me, my thoughts have run ahead of the facts. Let us return to what we
+  know for certain. Tell me again, as precisely as you can, what you observed.
+
+# Secondary filtering pass (thesis Section 3.5.3), run after the judge on every
+# candidate reply. DRAFT for group review. Rules that the judge was found to
+# miss in run 5 (2026-10-14): a flagged criterion is capped at `score_cap`, so
+# the reply fails validation and is regenerated.
+# - Style and Syntax: stage directions in brackets or asterisks, name labels,
+#   narration such as "Holmes said", quotation marks left open.
+# - Historical and World Boundary: any of `modern_terms` (whole words, plural
+#   too, any capitalisation). Holmes should not use them even to dismiss them.
+# - Persona Consistency (added after run 7): calling the visitor "Watson".
+# - Style and Syntax (added after run 7): dialogue tags such as '"...," I
+#   replied' and narrating the visitor ("The visitor's voice was low").
+safety_filter:
+  enabled: true
+  score_cap: 2
+  modern_terms:
+    - security camera
+    - surveillance
+    - footage
+    - CCTV
+    - video
+    - smartphone
+    - phone
+    - cell phone
+    - computer
+    - laptop
+    - internet
+    - online
+    - email
+    - e-mail
+    - website
+    - database
+    - text message
+    - social media
+    - DNA
+    - FBI
+    - GPS
+    - satellite
+    - television
+    - AI
+    - artificial intelligence
+    - ChatGPT
+    - chatbot
