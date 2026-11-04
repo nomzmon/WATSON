@@ -1,6 +1,7 @@
-# Weighted Interaction Constraint Score (WICS)
-# Thesis Section 5.2.1, Equation 5.1 and Table 5.2.
-# The judge scores each criterion as a whole number from 1 to 10.
+# criterion is weighted 0.25. Keep everything else the same as the current rubric;
+# a test checks it matches. scripts/compare_weights.py reads only the weights from
+# this file; a step with `rubric_variant: equal` (configs/experiments/
+# weight_comparison.yaml) runs the pipeline with the whole file.
 
 weights:
   OOP: 0.25  # Out-of-Persona Compatibility

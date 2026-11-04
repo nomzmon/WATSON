@@ -1,0 +1,43 @@
+# The rubric weights in a live run: the complete framework (C4) with the current
+# weights (configs/rubrics/{wics,dfms,ovs}.yaml) and with every criterion weighted
+# equally (configs/rubrics/variants/*_equal.yaml), on the same conversation and
+# seed. Unlike scripts/compare_weights.py, which recomputes the decisions of
+# finished runs, this shows how changed decisions play out over the conversation.
+# The steps do not build on each other, so read the report's "Regressions"
+# section as meaningless here.
+# For the scripted conversations, set dialogues to data/scenarios/scripted_dialogues.
+# Run: python scripts/run_middleware_regression.py --config configs/experiments/weight_comparison.yaml
+# Repeat with --seed 7 and --seed 123 and combine with scripts/combine_runs.py.
+
+profile: data/persona_profiles/holmes_profile_condensed.json
+dialogues: data/scenarios/long_dialogues
+seed: 42
+regression_tolerance: 1.0
+
+# Same expected decisions as the framework validation.
+expected_decisions:
+  normal: [accept, rephrase]
+  rushing: [accept, rephrase]
+  off_topic: [redirect]
+  anachronism: [reject]
+  persona_breaking: [reject]
+
+steps:
+  - name: "C4: complete framework, current weights"
+    template: prompts/generation/structured_prompt.txt
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true
+      output_validation: true
+      response_generation: true
+
+  - name: "C4: complete framework, equal weights"
+    template: prompts/generation/structured_prompt.txt
+    rubric_variant: equal
+    modules:
+      input_constraint: true
+      decision_layer: true
+      dialogue_flow: true
+      output_validation: true
+      response_generation: true

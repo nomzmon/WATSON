@@ -1,9 +1,14 @@
 from datetime import datetime
 
-from test_middleware_regression import run
+import pytest
+from pydantic import ValidationError
+
+from test_middleware_regression import FakeGemma, FakeJudge, run
 from watson.common.config import load_yaml
 from watson.common.rubric import load_rubric_weights
+from watson.evaluation.middleware_regression import StepConfig, build_pipeline, load_experiment_config
 from watson.evaluation.weight_comparison import compare_weights, render_weight_comparison
+from watson.middleware.generation.generator import ResponseGenerator
 from watson.middleware.dialogue_flow.flow_evaluator import DFMS_CRITERIA, load_dfms_weights
 from watson.middleware.input_constraint.scoring import WICS_CRITERIA, load_wics_weights
 from watson.middleware.output_validation.validator import OVS_CRITERIA, load_ovs_weights
@@ -59,3 +64,23 @@ def test_the_report_shows_the_weights_counts_and_changes():
     assert report.startswith("# Weight comparison: current weights against equal weights, 2026-11-04 15:00")
     assert "| WICS | input decision | OOP 0.35, TR 0.25, HC 0.25, GIP 0.15 | OOP 0.25, TR 0.25, HC 0.25, GIP 0.25 |" in report
     assert "## OVS: changed decisions" in report
+# --- Live runs with a rubric variant (configs/experiments/weight_comparison.yaml) ------------
+
+
+def test_the_weight_comparison_runs_c4_with_the_current_and_the_equal_weights():
+    config = load_experiment_config("configs/experiments/weight_comparison.yaml")
+    current, equal = (build_pipeline(step, config.profile, ResponseGenerator(FakeGemma()), FakeJudge())
+                      for step in config.steps)
+
+    assert current.input_constraint.weights == load_wics_weights()
+    assert current.dialogue_flow.evaluator.weights == load_dfms_weights()
+    assert current.output_validation.validator.weights == load_ovs_weights()
+    assert equal.input_constraint.weights == EQUAL["WICS"]
+    assert equal.dialogue_flow.evaluator.weights == EQUAL["DFMS"]
+    assert equal.output_validation.validator.weights == EQUAL["OVS"]
+    assert equal.decision_thresholds == current.decision_thresholds  # only the weights differ
+
+
+def test_a_missing_rubric_variant_is_refused_before_the_run():
+    with pytest.raises(ValidationError, match="rubric variant 'heavy' is missing"):
+        StepConfig(name="C4", template="prompts/generation/structured_prompt.txt", rubric_variant="heavy")

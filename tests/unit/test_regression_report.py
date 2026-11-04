@@ -84,6 +84,13 @@ def test_report_names_the_profiles_of_steps_that_set_their_own():
     assert "- **Step 2 persona profile:** `group.json`" in report
     assert "- **Persona judge scores against:** `group.json`" in report
 
+def test_report_names_the_rubric_variant_of_steps_that_set_one():
+    steps = [CONFIG.steps[0].model_copy(update={"rubric_variant": "equal"}), *CONFIG.steps[1:]]
+
+    report = render_report(DETAILS, CONFIG.model_copy(update={"steps": steps}), DIALOGUES, SUMMARIES, [], RECORDS)
+
+    assert "- **Step 1 rubrics:** `equal` variant (configs/rubrics/variants/)" in report
+
 def test_report_has_a_row_per_step_with_its_components():
     report = render_report(DETAILS, CONFIG, DIALOGUES, SUMMARIES, [], RECORDS)
 

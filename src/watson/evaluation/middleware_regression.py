@@ -75,7 +75,15 @@ class StepConfig(BaseModel):
     name: str
     template: str
     profile: str | None = None  # the persona profile for this step; defaults to the experiment's
+    # Rubric variant for this step, e.g. "equal" for configs/rubrics/variants/{wics,dfms,ovs}_equal.yaml
+    rubric_variant: str | None = None
     modules: ModuleToggles = Field(default_factory=ModuleToggles)
+
+    def rubric(self, name: str) -> str:
+        """The rubric file this step uses for wics, dfms or ovs."""
+        if self.rubric_variant:
+            return f"configs/rubrics/variants/{name}_{self.rubric_variant}.yaml"
+        return f"configs/rubrics/{name}.yaml"
 
     @field_validator("modules")
     @classmethod
@@ -91,6 +99,9 @@ class StepConfig(BaseModel):
         if guided and "{constraints}" not in load_text(self.template):
             raise ValueError("the Dialogue Flow Manager and Output Validation Engine need a template with a "
                              f"{{constraints}} section: {self.template}")
+        missing = [self.rubric(name) for name in ("wics", "dfms", "ovs") if not resolve_path(self.rubric(name)).exists()]
+        if missing:
+            raise ValueError(f"rubric variant {self.rubric_variant!r} is missing {missing}")
         return self
 
 
@@ -276,15 +287,15 @@ def build_pipeline(step: StepConfig, profile_path: str, generator: ResponseGener
     components = {}
     if step.modules.input_constraint:
         components.update(
-            input_constraint=InputConstraintEngine.from_config(judge),
-            decision_thresholds=load_decision_thresholds(),
+            input_constraint=InputConstraintEngine.from_config(judge, step.rubric("wics")),
+            decision_thresholds=load_decision_thresholds(step.rubric("wics")),
             decision_messages=DecisionMessages.from_config(),
             rephraser=Rephraser.from_config(judge),
         )
     if step.modules.dialogue_flow:
-        components["dialogue_flow"] = DialogueFlowManager.from_config(judge)
+        components["dialogue_flow"] = DialogueFlowManager.from_config(judge, step.rubric("dfms"))
     if step.modules.output_validation:
-        components["output_validation"] = OutputValidationEngine.from_config(judge, profile_path)
+        components["output_validation"] = OutputValidationEngine.from_config(judge, profile_path, step.rubric("ovs"))
     generator = ResponseGenerator(generator.client, generator.stop, clean=step.modules.response_generation)
     return Pipeline(builder, generator, **components)
 

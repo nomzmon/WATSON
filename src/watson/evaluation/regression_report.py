@@ -69,6 +69,8 @@ def render_report(
         f"- **Judge:** {details.judge_model}",
         f"- **Persona profile:** `{config.profile}`",
          *[f"- **Step {i} persona profile:** `{step.profile}`" for i, step in enumerate(config.steps, 1) if step.profile],
+         *[f"- **Step {i} rubrics:** `{step.rubric_variant}` variant (configs/rubrics/variants/)"
+          for i, step in enumerate(config.steps, 1) if step.rubric_variant],
         f"- **Persona judge scores against:** `{config.evaluation_profile or config.profile}`",
         f"- **Conversations:** {len(dialogues)} ({turns} turns), from `{config.dialogues}`",
         f"- **Seed:** {config.seed}",

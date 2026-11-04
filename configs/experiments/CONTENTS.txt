@@ -3,3 +3,4 @@ Experiment run definitions.
 - weight_variance.yaml      : which rubric variants to run and on which dataset
 - participant_study.yaml    : session setup, randomized configuration order per participant ID
 - persona_comparison.yaml   : C1 and C4 with the synthetic profile and with the group's profile
+- weight_comparison.yaml    : C4 with the current rubric weights and with equal weights (live run)
