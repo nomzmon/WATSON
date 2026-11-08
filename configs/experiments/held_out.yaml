@@ -7,7 +7,7 @@
 # The two steps are the configurations with the input check (C2 and C4 of
 # framework_validation.yaml); read the report's "Regressions" section as meaningless.
 
-profile: data/persona_profiles/holmes_profile_condensed.json  # the group's condensed profile (synthetic stand-in: tests/fixtures/holmes_profile_sample.json)
+profile: data/persona_profiles/holmes_profile_final.json  # the group's condensed profile (synthetic stand-in: tests/fixtures/holmes_profile_sample.json)
 dialogues: data/scenarios/held_out_dialogues
 seed: 42
 regression_tolerance: 1.0

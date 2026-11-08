@@ -1,8 +1,14 @@
 import json
 
+import pytest
+
 from watson.common.persona import from_condensed, load_persona_profile
 from watson.common.schemas import PersonaProfile
 from watson.middleware.prompt_builder.builder import render_persona
+
+GROUP = "data/persona_profiles/holmes_profile_condensed.json"
+FINAL = "data/persona_profiles/holmes_profile_final.json"
+SAMPLE = "tests/fixtures/holmes_profile_sample.json"
 
 GROUP = "data/persona_profiles/holmes_profile_condensed.json"
 SAMPLE = "tests/fixtures/holmes_profile_sample.json"
@@ -23,9 +29,20 @@ def test_the_group_profile_fills_all_five_layers():
                                                               "belief")] == [8, 14, 14, 6, 11]
 
 
-def test_the_group_profile_fits_the_generation_prompt():
+@pytest.mark.parametrize("path", [GROUP, FINAL])
+def test_the_group_profiles_fit_the_generation_prompt(path):
     # About 1,900 tokens; with the rest of the prompt and a 400-token reply this stays inside Gemma's 4096.
-    assert len(render_persona(load_persona_profile(GROUP))) < 8000
+    assert len(render_persona(load_persona_profile(path))) < 8000
+
+
+def test_the_final_profile_fills_all_five_layers_without_addressing_watson():
+    profile = load_persona_profile(FINAL)
+    text = render_persona(profile)
+
+    assert all(getattr(profile, layer).traits for layer in ("personality", "expression", "knowledge", "moral", "belief"))
+    assert "- I never guess." in text  # signature phrases as a plain list
+    assert "Novice" not in text and "Resources and contacts" not in text and "Disclosure pattern" not in text
+    assert "Remind" not in text and "asking Watson" not in text
 
 
 def test_entries_are_kept_word_for_word_except_the_sections_left_out():

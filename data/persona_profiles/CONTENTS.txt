@@ -5,3 +5,6 @@ Generated persona profiles (Persona Knowledge Base).
 - holmes_profile_condensed.json       : the group's condensed profile (test 7) in its layered format; turned into five
                                         trait lists when loaded, without the cases, formative experiences and non-verbal
                                         patterns (src/watson/common/persona.py)
+- holmes_profile_final.json           : the group's final profile, used by the middleware; signature phrases without
+                                        their descriptions, and resources/contacts and disclosure pattern removed so it
+                                        fits Gemma's context (about 7,700 characters in the prompt)

@@ -5,7 +5,7 @@
 # middleware now has a step; step 5 is the full pipeline. Every step cleans
 # Gemma's reply (response_generation), as it did before that became a switch.
 
-profile: data/persona_profiles/holmes_profile_condensed.json  # the group's condensed profile (synthetic stand-in: tests/fixtures/holmes_profile_sample.json)
+profile: data/persona_profiles/holmes_profile_final.json  # the group's condensed profile (synthetic stand-in: tests/fixtures/holmes_profile_sample.json)
 dialogues: data/scenarios/scripted_dialogues
 seed: 42
 

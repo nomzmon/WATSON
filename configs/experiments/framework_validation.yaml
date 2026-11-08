@@ -4,7 +4,7 @@
 # read the report's "Regressions" section as meaningless here.
 # Run: python scripts/run_middleware_regression.py --config configs/experiments/framework_validation.yaml
 
-profile: data/persona_profiles/holmes_profile_condensed.json  # the group's condensed profile (synthetic stand-in: tests/fixtures/holmes_profile_sample.json)
+profile: data/persona_profiles/holmes_profile_final.json  # the group's condensed profile (synthetic stand-in: tests/fixtures/holmes_profile_sample.json)
 dialogues: data/scenarios/scripted_dialogues
 seed: 42
 regression_tolerance: 1.0
