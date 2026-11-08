@@ -1,0 +1,353 @@
+{
+  "steps": [
+    {
+      "step": 1,
+      "name": "C1: baseline",
+      "persona_normal": 8.96,
+      "persona_drift": 9.0,
+      "drift_caught": 0,
+      "drift_total": 7,
+      "normal_blocked": 0,
+      "normal_total": 23,
+      "mean_latency_ms": 1659.6,
+      "narrative_normal": 8.61,
+      "repetition": 0.3,
+      "fallbacks": 0,
+      "directions_removed": 0
+    },
+    {
+      "step": 2,
+      "name": "C2: + input constraint and decision layer",
+      "persona_normal": 8.91,
+      "persona_drift": null,
+      "drift_caught": 7,
+      "drift_total": 7,
+      "normal_blocked": 0,
+      "normal_total": 23,
+      "mean_latency_ms": 11273.3,
+      "narrative_normal": 8.04,
+      "repetition": 0.53,
+      "fallbacks": 0,
+      "directions_removed": 0
+    },
+    {
+      "step": 3,
+      "name": "C3: + dialogue flow manager",
+      "persona_normal": 8.83,
+      "persona_drift": 8.43,
+      "drift_caught": 0,
+      "drift_total": 7,
+      "normal_blocked": 0,
+      "normal_total": 23,
+      "mean_latency_ms": 14378.9,
+      "narrative_normal": 8.09,
+      "repetition": 0.52,
+      "fallbacks": 0,
+      "directions_removed": 0
+    },
+    {
+      "step": 4,
+      "name": "C4: complete WATSON framework",
+      "persona_normal": 8.95,
+      "persona_drift": null,
+      "drift_caught": 7,
+      "drift_total": 7,
+      "normal_blocked": 1,
+      "normal_total": 23,
+      "mean_latency_ms": 14110.7,
+      "narrative_normal": 8.77,
+      "repetition": 0.42,
+      "fallbacks": 0,
+      "directions_removed": 0
+    }
+  ],
+  "input_checks": [
+    {
+      "step": 2,
+      "kind": "normal",
+      "turns": 21,
+      "wics": 9.43,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 9.71,
+        "HC": 10.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 21,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 0
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 21
+    },
+    {
+      "step": 2,
+      "kind": "rushing",
+      "turns": 2,
+      "wics": 9.12,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 8.5,
+        "HC": 10.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 2,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 0
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 2,
+      "kind": "off_topic",
+      "turns": 3,
+      "wics": 7.45,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 2.0,
+        "HC": 10.0,
+        "GIP": 8.67
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 3,
+        "reject": 0
+      },
+      "expected": [
+        "redirect"
+      ],
+      "as_expected": 3
+    },
+    {
+      "step": 2,
+      "kind": "anachronism",
+      "turns": 2,
+      "wics": 3.05,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 5.0,
+        "HC": 1.0,
+        "GIP": 8.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 2,
+      "kind": "persona_breaking",
+      "turns": 2,
+      "wics": 3.03,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 1.0,
+        "HC": 5.5,
+        "GIP": 7.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 4,
+      "kind": "normal",
+      "turns": 21,
+      "wics": 9.43,
+      "criteria": {
+        "OOP": 9.0,
+        "TR": 9.71,
+        "HC": 10.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 21,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 0
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 21
+    },
+    {
+      "step": 4,
+      "kind": "rushing",
+      "turns": 2,
+      "wics": 5.7,
+      "criteria": {
+        "OOP": 5.5,
+        "TR": 4.5,
+        "HC": 5.5,
+        "GIP": 8.5
+      },
+      "decisions": {
+        "accept": 1,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 1
+      },
+      "expected": [
+        "accept",
+        "rephrase"
+      ],
+      "as_expected": 1
+    },
+    {
+      "step": 4,
+      "kind": "off_topic",
+      "turns": 3,
+      "wics": 6.48,
+      "criteria": {
+        "OOP": 6.33,
+        "TR": 1.67,
+        "HC": 10.0,
+        "GIP": 9.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 2,
+        "reject": 1
+      },
+      "expected": [
+        "redirect"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 4,
+      "kind": "anachronism",
+      "turns": 2,
+      "wics": 2.78,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 4.5,
+        "HC": 1.0,
+        "GIP": 7.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    },
+    {
+      "step": 4,
+      "kind": "persona_breaking",
+      "turns": 2,
+      "wics": 3.53,
+      "criteria": {
+        "OOP": 1.0,
+        "TR": 1.0,
+        "HC": 7.5,
+        "GIP": 7.0
+      },
+      "decisions": {
+        "accept": 0,
+        "rephrase": 0,
+        "redirect": 0,
+        "reject": 2
+      },
+      "expected": [
+        "reject"
+      ],
+      "as_expected": 2
+    }
+  ],
+  "dialogue_flow": [
+    {
+      "step": 3,
+      "turns": 30,
+      "dfms": 7.45,
+      "criteria": {
+        "CST": 7.0,
+        "NP": 7.5,
+        "CC": 8.07,
+        "TBC": 7.57
+      },
+      "guided_turns": 13,
+      "final_stages": {
+        "long_01": "deduction"
+      },
+      "proposed_stages": {
+        "introduction": 2,
+        "evidence": 11,
+        "suspects": 16,
+        "resolution": 1
+      }
+    },
+    {
+      "step": 4,
+      "turns": 22,
+      "dfms": 8.55,
+      "criteria": {
+        "CST": 8.36,
+        "NP": 8.59,
+        "CC": 8.73,
+        "TBC": 8.68
+      },
+      "guided_turns": 3,
+      "final_stages": {
+        "long_01": "deduction"
+      },
+      "proposed_stages": {
+        "introduction": 2,
+        "evidence": 12,
+        "suspects": 7,
+        "resolution": 1
+      }
+    }
+  ],
+  "output_validation": [
+    {
+      "step": 4,
+      "turns": 22,
+      "passed_first": 22,
+      "passed_after_retry": 0,
+      "fallbacks": 0,
+      "filtered_first": 0,
+      "mean_attempts": 1.0,
+      "first_ovs": 9.03,
+      "final_ovs": 9.03,
+      "first_criteria": {
+        "PCC": 9.36,
+        "NC": 7.91,
+        "HWB": 9.86,
+        "SS": 9.36
+      }
+    }
+  ]
+}
