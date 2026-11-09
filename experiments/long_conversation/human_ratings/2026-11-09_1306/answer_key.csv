@@ -1,0 +1,61 @@
+﻿item,step,step_name,dialogue_id,turn,kind,judge_persona,judge_narrative
+R01,1,C1: baseline,long_01,12,normal,9,9
+R02,1,C1: baseline,long_01,7,normal,9,9
+R03,4,C4: complete WATSON framework,long_01,13,normal,9,9
+R04,1,C1: baseline,long_01,18,persona_breaking,7,9
+R05,1,C1: baseline,long_01,21,normal,9,9
+R06,4,C4: complete WATSON framework,long_01,20,rushing,9,9
+R07,4,C4: complete WATSON framework,long_01,11,normal,9,9
+R08,3,C3: + dialogue flow manager,long_01,19,normal,9,9
+R09,2,C2: + input constraint and decision layer,long_01,20,rushing,9,7
+R10,1,C1: baseline,long_01,11,normal,9,9
+R11,4,C4: complete WATSON framework,long_01,25,normal,9,9
+R12,2,C2: + input constraint and decision layer,long_01,2,normal,9,9
+R13,3,C3: + dialogue flow manager,long_01,24,normal,9,8
+R14,4,C4: complete WATSON framework,long_01,14,normal,9,9
+R15,3,C3: + dialogue flow manager,long_01,14,normal,9,9
+R16,2,C2: + input constraint and decision layer,long_01,30,normal,9,8
+R17,2,C2: + input constraint and decision layer,long_01,13,normal,9,9
+R18,1,C1: baseline,long_01,25,normal,9,8
+R19,3,C3: + dialogue flow manager,long_01,27,normal,9,8
+R20,4,C4: complete WATSON framework,long_01,30,normal,9,7
+R21,4,C4: complete WATSON framework,long_01,9,normal,9,9
+R22,4,C4: complete WATSON framework,long_01,6,normal,9,9
+R23,4,C4: complete WATSON framework,long_01,22,normal,9,9
+R24,3,C3: + dialogue flow manager,long_01,8,rushing,9,9
+R25,3,C3: + dialogue flow manager,long_01,23,anachronism,9,7
+R26,2,C2: + input constraint and decision layer,long_01,3,normal,9,9
+R27,2,C2: + input constraint and decision layer,long_01,12,normal,9,9
+R28,1,C1: baseline,long_01,13,normal,9,9
+R29,4,C4: complete WATSON framework,long_01,24,normal,9,9
+R30,1,C1: baseline,long_01,5,normal,9,9
+R31,1,C1: baseline,long_01,20,rushing,9,7
+R32,3,C3: + dialogue flow manager,long_01,22,normal,9,8
+R33,1,C1: baseline,long_01,19,normal,9,8
+R34,3,C3: + dialogue flow manager,long_01,4,off_topic,9,9
+R35,1,C1: baseline,long_01,26,persona_breaking,7,7
+R36,2,C2: + input constraint and decision layer,long_01,5,normal,9,9
+R37,3,C3: + dialogue flow manager,long_01,13,normal,9,9
+R38,1,C1: baseline,long_01,4,off_topic,9,8
+R39,1,C1: baseline,long_01,2,normal,9,9
+R40,3,C3: + dialogue flow manager,long_01,10,anachronism,9,8
+R41,2,C2: + input constraint and decision layer,long_01,9,normal,9,9
+R42,2,C2: + input constraint and decision layer,long_01,19,normal,9,9
+R43,2,C2: + input constraint and decision layer,long_01,28,normal,9,7
+R44,3,C3: + dialogue flow manager,long_01,30,normal,9,7
+R45,3,C3: + dialogue flow manager,long_01,2,normal,9,9
+R46,4,C4: complete WATSON framework,long_01,5,normal,9,9
+R47,3,C3: + dialogue flow manager,long_01,18,persona_breaking,9,8
+R48,1,C1: baseline,long_01,3,normal,9,9
+R49,4,C4: complete WATSON framework,long_01,17,normal,9,7
+R50,3,C3: + dialogue flow manager,long_01,6,normal,9,9
+R51,1,C1: baseline,long_01,17,normal,9,9
+R52,4,C4: complete WATSON framework,long_01,27,normal,9,8
+R53,2,C2: + input constraint and decision layer,long_01,17,normal,9,9
+R54,2,C2: + input constraint and decision layer,long_01,27,normal,9,7
+R55,2,C2: + input constraint and decision layer,long_01,21,normal,9,7
+R56,4,C4: complete WATSON framework,long_01,12,normal,9,9
+R57,3,C3: + dialogue flow manager,long_01,5,normal,9,9
+R58,2,C2: + input constraint and decision layer,long_01,1,normal,9,9
+R59,2,C2: + input constraint and decision layer,long_01,22,normal,9,8
+R60,4,C4: complete WATSON framework,long_01,16,normal,9,9
