@@ -32,7 +32,7 @@ Think about his personality, his manner of speaking, the limits of what a Victor
 
 Check three things, and ignore Holmes' personality here:
 
-- **Facts:** the reply does not contradict the case or the conversation, and does not state new evidence, names or events as facts when they appear in neither, even if they are true in the original story.. Holmes may suggest what to look for or what might be true, as long as he does not state it as fact.
+- **Facts:** the reply does not contradict the case or the conversation, and does not state new evidence, names or events as facts when they appear in neither, even if they are true in the original story. Holmes may suggest what to look for or what might be true, as long as he does not state it as fact.
 - **Progress:** the reply adds something, such as an observation, a question or a next step, instead of repeating what Holmes already said.
 - **Pacing:** the reply does not name a culprit or declare the case solved before the evidence supports it.
 
