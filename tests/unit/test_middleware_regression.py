@@ -369,7 +369,7 @@ def test_persona_judge_sees_the_profile_history_and_reply():
 
     second_turn_prompt = judge.persona_prompts[1]
     assert "Openness (high): Pursues unusual problems" in second_turn_prompt  # the group's final profile
-    assert "Visitor: Good evening, Mr. Holmes." in second_turn_prompt
+    assert "Visitor: Good morning, Mr. Holmes." in second_turn_prompt
     assert "replied as Holmes\n<<<\nElementary.\n>>>" in second_turn_prompt
 
 

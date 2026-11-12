@@ -2,9 +2,11 @@
 
 Thank you for helping us check our automatic judges. You will rate replies written by a Sherlock Holmes chatbot. Each reply comes from a short conversation about the same case:
 
-> A pearl necklace was stolen from Lady Ashworth's locked study. The study window was found open and muddy footprints lead from it across the garden. The butler, Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+> Two days after Christmas, at 221B Baker Street. Peterson, a commissionaire, recovered a battered hat and a goose after their owner fled a street disturbance, and brought them to Holmes, who let him take the goose home to eat. Peterson has now returned with a blue gemstone that his wife found inside the bird.
 
-The person speaking with Holmes is his assistant, and Holmes should address them as "my dear assistant".
+The case is based on "The Adventure of the Blue Carbuncle". Holmes learns everything else from the conversation, so judge each reply against the case above and the earlier conversation only, not against what you know of the original story.
+
+The person speaking with Holmes is his companion, and Holmes should address them as "my dear assistant".
 
 ## What to do
 
@@ -30,7 +32,7 @@ Think about his personality, his manner of speaking, the limits of what a Victor
 
 Check three things, and ignore Holmes' personality here:
 
-- **Facts:** the reply does not contradict the case or the conversation, and does not state new evidence, names or events as facts when they appear in neither. Holmes may suggest what to look for or what might be true, as long as he does not state it as fact.
+- **Facts:** the reply does not contradict the case or the conversation, and does not state new evidence, names or events as facts when they appear in neither, even if they are true in the original story.. Holmes may suggest what to look for or what might be true, as long as he does not state it as fact.
 - **Progress:** the reply adds something, such as an observation, a question or a next step, instead of repeating what Holmes already said.
 - **Pacing:** the reply does not name a culprit or declare the case solved before the evidence supports it.
 

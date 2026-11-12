@@ -9,17 +9,22 @@
 #   conversations of 5-8 turns each. Start each conversation with a normal turn.
 # - Kinds: normal, rushing, off_topic, anachronism, persona_breaking (see
 #   scripted_dialogues/dialogue_01 for what each means). The visitor is Holmes'
-#   assistant, as in the scripted dialogues.
+#   companion, as in the scripted dialogues. Reveal clues in the order of
+#   data/scenarios/blue_carbuncle_scenario.md.
 # - Use new wording; do not paraphrase the scripted dialogues' messages.
 id: held_out_01
 title: Short description of the conversation
 case_context: >-
-  A pearl necklace was stolen from Lady Ashworth's locked study. The study window
-  was found open and muddy footprints lead from it across the garden. The butler,
-  Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+  Two days after Christmas, at 221B Baker Street. Peterson, a commissionaire,
+  recovered a battered hat and a goose after their owner fled a street
+  disturbance, and brought them to Holmes, who let him take the goose home to
+  eat. Peterson has now returned with a blue gemstone that his wife found inside
+  the bird. The hat and the stone are there to examine, and Peterson can answer
+  questions about what happened. Holmes knows nothing more of the case than
+  this; everything else he learns from his companion during the investigation.
 visitor: >-
-  Your assistant, who is helping you investigate the theft of Lady Ashworth's
-  pearl necklace.
+  Your trusted companion, who is investigating the case of the blue stone and
+  the Christmas goose alongside you.
 turns:
   - kind: normal
     message: (an ordinary question or report about the case)

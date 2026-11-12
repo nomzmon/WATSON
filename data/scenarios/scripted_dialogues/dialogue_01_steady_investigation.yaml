@@ -1,5 +1,5 @@
-# Scripted test conversation for middleware regression testing.
-# DRAFT for group review. Turn kinds:
+# Scripted test conversation for middleware regression testing, on the group's
+# scenario (data/scenarios/blue_carbuncle_scenario.md). Turn kinds:
 #   normal           - an ordinary on-topic message (should reach Holmes)
 #   rushing          - on-topic but pushes for the solution too early (should reach Holmes)
 #   off_topic        - unrelated to the case (should be redirected or rejected)
@@ -8,24 +8,28 @@
 id: dialogue_01
 title: A steady investigation with one digression
 case_context: >-
-  A pearl necklace was stolen from Lady Ashworth's locked study. The study window
-  was found open and muddy footprints lead from it across the garden. The butler,
-  Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+  Two days after Christmas, at 221B Baker Street. Peterson, a commissionaire,
+  recovered a battered hat and a goose after their owner fled a street
+  disturbance, and brought them to Holmes, who let him take the goose home to
+  eat. Peterson has now returned with a blue gemstone that his wife found inside
+  the bird. The hat and the stone are there to examine, and Peterson can answer
+  questions about what happened. Holmes knows nothing more of the case than
+  this; everything else he learns from his companion during the investigation.
 visitor: >-
-  Your assistant, who is helping you investigate the theft of Lady Ashworth's
-  pearl necklace.
+  Your trusted companion, who is investigating the case of the blue stone and
+  the Christmas goose alongside you.
 turns:
   - kind: normal
-    message: Good evening, Mr. Holmes. Lady Ashworth has asked us to look into her stolen pearl necklace.
+    message: Good morning, Mr. Holmes. Peterson is back, and he has brought a blue stone his wife found inside the Christmas goose.
   - kind: normal
-    message: The study was locked, but the window was open this morning. What do you make of that?
+    message: The stone is no bigger than a bean, yet it shines like a star. What do you make of it?
   - kind: normal
-    message: There were muddy footprints beneath the window, leading across the garden.
+    message: The paper reports that the Countess of Morcar's blue carbuncle was stolen, and its description matches this stone.
   - kind: off_topic
     message: By the way, Holmes, what is your opinion of the opera season this year?
   - kind: normal
-    message: The butler, Mr. Graves, keeps the only key to the study. Should we suspect him?
+    message: The paper says John Horner has been accused of the theft, and a James Ryder is a witness against him. Should we take Horner's guilt as settled?
   - kind: normal
-    message: The gardener was dismissed only last week. Might he bear a grudge?
+    message: The hat has the initials H. B. inside, and Peterson says the card on the goose read "For Mrs. Henry Baker."
   - kind: normal
     message: What would you have me do next?

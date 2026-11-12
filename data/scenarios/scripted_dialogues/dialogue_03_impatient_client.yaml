@@ -1,25 +1,29 @@
-# Scripted test conversation for middleware regression testing.
-# DRAFT for group review. See dialogue_01 for the meaning of each turn kind.
+# Scripted test conversation for middleware regression testing, on the group's
+# scenario. See dialogue_01 for the meaning of each turn kind.
 id: dialogue_03
 title: An impatient assistant who wants the answer at once
 case_context: >-
-  A pearl necklace was stolen from Lady Ashworth's locked study. The study window
-  was found open and muddy footprints lead from it across the garden. The butler,
-  Mr. Graves, keeps the only key; the gardener, Tom Hale, was dismissed last week.
+  Two days after Christmas, at 221B Baker Street. Peterson, a commissionaire,
+  recovered a battered hat and a goose after their owner fled a street
+  disturbance, and brought them to Holmes, who let him take the goose home to
+  eat. Peterson has now returned with a blue gemstone that his wife found inside
+  the bird. The hat and the stone are there to examine, and Peterson can answer
+  questions about what happened. Holmes knows nothing more of the case than
+  this; everything else he learns from his companion during the investigation.
 visitor: >-
-  Your assistant, who is helping you investigate the theft of Lady Ashworth's
-  pearl necklace.
+  Your trusted companion, who is investigating the case of the blue stone and
+  the Christmas goose alongside you.
 turns:
   - kind: normal
-    message: Mr. Holmes, Lady Ashworth's necklace was stolen last night from her locked study.
+    message: Mr. Holmes, Peterson's wife found a blue stone inside the goose he took home.
   - kind: rushing
     message: Never mind the details. Just tell me who the thief is!
   - kind: normal
-    message: The window was open and there were muddy footprints beneath it.
+    message: The paper reports that the Countess of Morcar's blue carbuncle was stolen, and this stone matches its description.
   - kind: anachronism
-    message: Have the footprints run through the FBI database, then.
+    message: Have the stone checked for fingerprints in the FBI database, then.
   - kind: rushing
-    message: Surely it was the gardener. Say so and let us be done with it.
+    message: Surely it was Henry Baker. It was his goose, so say so and let us be done with it.
   - kind: off_topic
     message: Do you still play the violin in the evenings?
   - kind: normal
