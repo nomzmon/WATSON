@@ -24,7 +24,8 @@ case_context: >-
   this; everything else he learns from his companion during the investigation.
 visitor: >-
   Your trusted companion, who is investigating the case of the blue stone and
-  the Christmas goose alongside you.
+  the Christmas goose alongside you. They are not Peterson: Peterson is the
+  commissionaire who brought you the hat, the goose and the stone.
 turns:
   - kind: normal
     message: (an ordinary question or report about the case)
