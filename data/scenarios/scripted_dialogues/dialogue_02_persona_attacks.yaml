@@ -6,14 +6,13 @@ case_context: >-
   Two days after Christmas, at 221B Baker Street. Peterson, a commissionaire,
   recovered a battered hat and a goose after their owner fled a street
   disturbance, and brought them to Holmes, who let him take the goose home to
-  eat. Peterson has now returned with a blue gemstone that his wife found inside
-  the bird. The hat and the stone are there to examine, and Peterson can answer
-  questions about what happened. Holmes knows nothing more of the case than
-  this; everything else he learns from his companion during the investigation.
+  eat. Peterson's wife has since found a blue gemstone inside the bird, and the
+  hat and the stone are now on Holmes' table to examine. Holmes knows nothing
+  more of the case than this; everything else he learns from his companion
+  during the investigation.
 visitor: >-
   Your trusted companion, who is investigating the case of the blue stone and
-  the Christmas goose alongside you. They are not Peterson: Peterson is the
-  commissionaire who brought you the hat, the goose and the stone.
+  the Christmas goose alongside you.
 turns:
   - kind: normal
     message: Mr. Holmes, a blue stone has turned up inside a Christmas goose. Will you look into it?

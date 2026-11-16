@@ -58,7 +58,7 @@ Kinds: normal, off-topic, rushing, anachronism, persona-breaking
 (21 normal, 3 off-topic, 2 rushing, 2 anachronism, 2 persona-breaking)
 
 Introduction
- 1. [normal]           Good morning, Mr. Holmes. Peterson is back, and his wife found a blue stone inside the Christmas goose.
+ 1. [normal]           Good morning, Mr. Holmes. Peterson called this morning. His wife found a blue stone inside the Christmas goose.
  2. [normal]           He says the goose and this battered hat were dropped by a man who fled a street disturbance.
  3. [normal]           Where would you like to begin?
  4. [off-topic]        Before we begin, have you heard there is to be a new opera at the Savoy this winter?
